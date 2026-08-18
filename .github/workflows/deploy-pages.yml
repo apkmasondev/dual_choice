@@ -42,12 +42,21 @@ jobs:
         env:
           PAGE_URL: ${{ steps.pages.outputs.base_url }}
           PAGE_PATH: ${{ steps.pages.outputs.base_path }}
+          PAGE_ORIGIN: ${{ steps.pages.outputs.origin }}
         run: |
           BASE_PATH="${PAGE_PATH:-/}"
           [ "${BASE_PATH#/}" = "$BASE_PATH" ] && BASE_PATH="/$BASE_PATH"
           [ "${BASE_PATH%/}" = "$BASE_PATH" ] && BASE_PATH="$BASE_PATH/"
+
+          # Pages reports an http:// origin until HTTPS enforcement is on, and
+          # a canonical or og:image baked as http:// stays wrong in every
+          # scraper's cache long after the redirect exists. Pages serves TLS on
+          # every domain it hosts, so the origin is always upgraded.
+          ORIGIN="${PAGE_ORIGIN/#http:\/\//https://}"
+
           echo "base_path=$BASE_PATH" >> "$GITHUB_OUTPUT"
-          echo "Publishing $PAGE_URL with Vite base '$BASE_PATH'"
+          echo "origin=$ORIGIN" >> "$GITHUB_OUTPUT"
+          echo "Publishing $PAGE_URL with Vite base '$BASE_PATH' and origin '$ORIGIN'"
 
       - run: npm ci
 
@@ -59,14 +68,14 @@ jobs:
           # pointing somewhere that does not exist.
           VITE_CONTACT_URL: ${{ vars.CONTACT_URL }}
           VITE_PORTFOLIO_URL: ${{ vars.PORTFOLIO_URL }}
-          VITE_SITE_ORIGIN: ${{ steps.pages.outputs.origin }}
+          VITE_SITE_ORIGIN: ${{ steps.base.outputs.origin }}
         run: npm run build
 
       - name: Report configuration
         env:
           VITE_CONTACT_URL: ${{ vars.CONTACT_URL }}
           VITE_PORTFOLIO_URL: ${{ vars.PORTFOLIO_URL }}
-          VITE_SITE_ORIGIN: ${{ steps.pages.outputs.origin }}
+          VITE_SITE_ORIGIN: ${{ steps.base.outputs.origin }}
         run: npm run check:config
 
       - uses: actions/upload-pages-artifact@v5
