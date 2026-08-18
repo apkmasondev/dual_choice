@@ -97,6 +97,15 @@ export class ScrollScrubber {
     this.#atChoice = true;
   }
 
+  /** Puts the document, and with it the playhead, back at the first frame. */
+  scrollToStart(): void {
+    globalThis.scrollTo({ top: 0, behavior: 'instant' });
+    this.#scrollY = 0;
+    this.#progress = 0;
+    this.#smoothedTime = 0;
+    this.#atChoice = false;
+  }
+
   /** Puts the document back at the scroll position that corresponds to CHOICE. */
   scrollToChoiceAnchor(): void {
     const range = this.#scrollRange();

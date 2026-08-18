@@ -50,8 +50,11 @@ const TRANSITIONS: Record<ExperienceState, readonly ExperienceState[]> = {
   // A branch that fails to load falls back to its reveal (poster + copy) or,
   // if even that is impossible, back to choice.
   'branch-loading': ['red-playing', 'blue-playing', 'red-reveal', 'blue-reveal', 'choice'],
-  'red-playing': ['red-reveal'],
-  'blue-playing': ['blue-reveal'],
+  // `returning` is the wordmark: it takes the visitor back to the beginning
+  // from anywhere they are watching, and a film mid-flight is one of those
+  // places. The path it then follows is the one CHOOSE AGAIN already uses.
+  'red-playing': ['red-reveal', 'returning'],
+  'blue-playing': ['blue-reveal', 'returning'],
   // reveal -> playing is the reduced-motion opt-in: the still and the sales
   // copy arrive without any movement, and "PLAY PRODUCT FILM" lets the visitor
   // ask for the film explicitly. Section 14 requires that escape hatch; the

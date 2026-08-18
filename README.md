@@ -271,7 +271,8 @@ copy is the product, not the film box (`PRODUCT_SAFE_RECT`).
 - Hotspots are real `<button>`s with names that never rely on colour:
   "Choose CONTROL — the blue crystal in the left hand." Shape, name, position
   and colour all carry the distinction.
-- Tab order at the choice is BLUE, RED, sound, matching reading order. Hotspots
+- Tab order at the choice is BLUE, RED, the wordmark, then sound: the objects
+  come before the chrome that frames them. Hotspots
   are not tab stops before the choice exists.
 - The entry overlay is a native `<dialog>` opened with `showModal()`, so focus
   is contained and the page behind it is inert without a hand-rolled trap.
@@ -283,6 +284,9 @@ copy is the product, not the film box (`PRODUCT_SAFE_RECT`).
 - A polite live region announces the choice and the selected branch — not the
   playhead.
 - After a film ends, focus moves to the heading that just appeared.
+- The wordmark is a real link to `#top`, so without JavaScript it still returns
+  the document to the top; with it, the whole experience winds back to the
+  first frame.
 
 ### Reduced motion
 

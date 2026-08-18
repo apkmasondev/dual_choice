@@ -56,4 +56,30 @@ test.describe('reduced motion', () => {
     await expect(page.locator('html')).toHaveAttribute('data-state', 'choice', { timeout: 15_000 });
     await expect(page.getByRole('button', { name: /DESIRE/ })).toBeEnabled();
   });
+
+  test('the wordmark returns to the choice, which is where this variant starts', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'CONTINUE MUTED' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-state', 'choice', { timeout: 20_000 });
+
+    await page.locator('#hotspot-blue').click();
+    await expect(page.locator('html')).toHaveAttribute('data-state', 'blue-reveal', {
+      timeout: 20_000,
+    });
+
+    await page.getByRole('link', { name: /back to the beginning/i }).click();
+
+    // There is no scrubbed intro to wind back to, so the way back ends at the
+    // choice — and the objects have to be live again, not merely on screen.
+    await expect(page.locator('html')).toHaveAttribute('data-state', 'choice', { timeout: 15_000 });
+    // Live means reachable, not merely visible: a pointer could still hit a
+    // hotspot that had been dropped out of the tab order, so the tab order is
+    // what this asserts.
+    await expect(page.locator('#hotspot-blue')).toHaveAttribute('tabindex', '0');
+    await expect(page.locator('#hotspot-red')).toHaveAttribute('tabindex', '0');
+    await page.locator('#hotspot-blue').click();
+    await expect(page.locator('html')).toHaveAttribute('data-branch', 'blue');
+  });
 });

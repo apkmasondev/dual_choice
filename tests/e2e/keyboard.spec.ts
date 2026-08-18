@@ -41,7 +41,9 @@ test.describe('keyboard only', () => {
     for (let i = 0; i < 14; i++) await page.keyboard.press('PageDown');
     await scrollToChoice(page);
 
-    // Tab order at CHOICE: BLUE, RED, then sound (plan section 14.3).
+    // Tab order at CHOICE: BLUE, RED, the wordmark, then sound. The objects
+    // come first deliberately — the chrome sits after them in the DOM, so the
+    // choice is reachable before anything that frames it.
     await page.evaluate(() => {
       document.body.focus();
       (document.activeElement as HTMLElement | null)?.blur();
@@ -51,6 +53,8 @@ test.describe('keyboard only', () => {
     expect(await focusedId(page)).toBe('hotspot-blue');
     await page.keyboard.press('Tab');
     expect(await focusedId(page)).toBe('hotspot-red');
+    await page.keyboard.press('Tab');
+    expect(await focusedId(page)).toBe('brand-home');
     await page.keyboard.press('Tab');
     expect(await focusedId(page)).toBe('sound-toggle');
 

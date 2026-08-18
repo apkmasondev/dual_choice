@@ -128,12 +128,29 @@ describe('ExperienceMachine — choose again', () => {
     }
   });
 
-  it('does not allow returning straight from playback', () => {
+  /*
+    Playback used to be a one-way street: the only exit was the reveal, so a
+    committed visitor always met the sales copy. The wordmark changed that on
+    purpose — it is the way back to the first frame from anywhere, and a film
+    still running is somewhere. What has not changed is that the exit is the
+    same one CHOOSE AGAIN uses: playback still cannot jump to the choice, to
+    the other branch, or anywhere but its own reveal and `returning`.
+  */
+  it('lets playback back out only through returning', () => {
     const machine = atChoice();
     machine.commitSelection('red');
     machine.beginPlayback();
-    expect(machine.chooseAgain()).toBe(false);
-    expect(machine.state).toBe('red-playing');
+
+    expect(machine.can('choice')).toBe(false);
+    expect(machine.can('blue-playing')).toBe(false);
+    expect(machine.can('blue-reveal')).toBe(false);
+    expect(machine.can('intro')).toBe(false);
+
+    expect(machine.chooseAgain()).toBe(true);
+    expect(machine.state).toBe('returning');
+    expect(machine.arriveAtChoice()).toBe(true);
+    expect(machine.branch).toBe(null);
+    expect(machine.selectionCommitted).toBe(false);
   });
 });
 

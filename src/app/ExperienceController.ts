@@ -9,7 +9,12 @@ import {
   type VariantId,
 } from '../config/media.ts';
 import { COPY } from '../content/copy.ts';
-import { ExperienceMachine, isBranchReveal, type ExperienceState } from './ExperienceState.ts';
+import {
+  ExperienceMachine,
+  isBranchPlaying,
+  isBranchReveal,
+  type ExperienceState,
+} from './ExperienceState.ts';
 import { AmbientBackdrop } from '../media/AmbientBackdrop.ts';
 import { AudioController } from '../media/AudioController.ts';
 import { ScrollScrubber } from '../media/ScrollScrubber.ts';
@@ -261,6 +266,14 @@ export class ExperienceController {
       void this.#enter();
     });
 
+    const home = requireElementOf('brand-home', HTMLAnchorElement);
+    this.#disposables.listen(home, 'click', (event) => {
+      // The href is the no-JavaScript answer; with JavaScript the whole
+      // experience has to be wound back, not just the scroll position.
+      event.preventDefault();
+      this.#restart();
+    });
+
     this.#disposables.listen(this.#skipButton, 'click', () => {
       void this.#skip();
     });
@@ -503,9 +516,53 @@ export class ExperienceController {
     });
   }
 
+  // ---------------------------------------------------------------- restart
+
+  /**
+   * Back to the first frame, from wherever the visitor is.
+   *
+   * A film on screen has to be wound back before the intro can be, so those
+   * states borrow the CHOOSE AGAIN crossfade and carry on from the choice.
+   * `branch-loading` is the one state that does nothing: a film is already on
+   * its way, the moment is measured in a few hundred milliseconds, and
+   * abandoning a load that is about to succeed is a worse answer than making
+   * the visitor click twice.
+   */
+  #restart(): void {
+    const state = this.#machine.state;
+    if (state === 'branch-loading') return;
+
+    // Reduced motion has no scrubbed intro to wind back: its beginning *is*
+    // the choice frame, so there the wordmark ends where CHOOSE AGAIN ends —
+    // with the hotspots live and announced, which is the whole point.
+    const destination = this.#machine.prefersReducedMotion ? 'choice' : 'start';
+
+    if (isBranchReveal(state) || isBranchPlaying(state)) {
+      this.#chooseAgain(destination);
+      return;
+    }
+
+    this.#returnToStart();
+  }
+
+  /**
+   * Winds the scrubbed intro back to its first frame.
+   *
+   * Reduced motion has no scrubbed intro to return to — its beginning *is* the
+   * choice frame — so there the journey ends where CHOOSE AGAIN leaves it.
+   */
+  #returnToStart(): void {
+    if (this.#machine.prefersReducedMotion) return;
+    if (this.#machine.state === 'choice' && !this.#machine.transition('intro')) return;
+
+    this.#hotspots.setInteractive(false);
+    this.#scrubber.scrollToStart();
+    this.#live.announce(COPY.brand.liveRestart);
+  }
+
   // ------------------------------------------------------------ choose again
 
-  #chooseAgain(): void {
+  #chooseAgain(destination: 'choice' | 'start' = 'choice'): void {
     const branch = this.#machine.branch;
     if (!branch || !this.#machine.chooseAgain()) return;
 
@@ -531,6 +588,12 @@ export class ExperienceController {
       branchVideo.reset();
       if (!this.#machine.arriveAtChoice()) return;
       this.#hotspots.reset();
+
+      if (destination === 'start') {
+        this.#returnToStart();
+        return;
+      }
+
       this.#hotspots.setInteractive(true);
       this.#hotspots.focusFirst();
       this.#live.announce(COPY.choice.live);

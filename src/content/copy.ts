@@ -13,6 +13,9 @@ export const COPY = {
 
   brand: {
     wordmark: 'APK',
+    /** Contains the visible word, so the name still matches what is read out. */
+    home: 'APK — back to the beginning',
+    liveRestart: 'Back to the beginning. Scroll to move through the film again.',
     /** No "APK /" prefix: it hangs directly under the wordmark. */
     eyebrow: 'INTERACTIVE PRODUCT EXPERIENCE',
   },

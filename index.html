@@ -183,7 +183,12 @@
       </div>
 
       <div class="chrome">
-        <p class="brand">APK</p>
+        <!-- Not a masthead any more: it is the way back to the first frame.
+             Without JavaScript it still does the honest half of the job and
+             puts the document back at the top. -->
+        <a class="brand" id="brand-home" href="#top" aria-label="APK — back to the beginning"
+          >APK</a
+        >
 
         <button
           class="control control--bare sound-toggle"

@@ -100,6 +100,39 @@ test.describe('desktop journey', () => {
     expect(bluePaused).toBe(true);
   });
 
+  test('the wordmark winds the experience back to the first frame', async ({ page }) => {
+    await reachChoice(page);
+    await chooseBranch(page, 'red');
+    await skipToReveal(page, 'red');
+
+    await page.getByRole('link', { name: /back to the beginning/i }).click();
+
+    await expect(page.locator('html')).toHaveAttribute('data-state', 'intro', { timeout: 15_000 });
+    await expect(page.locator('#reveal')).toBeHidden();
+    expect(await page.evaluate(() => globalThis.scrollY)).toBe(0);
+    expect(await page.evaluate(() => document.documentElement.dataset['branch'])).toBeUndefined();
+
+    // And the story runs again from there, rather than merely looking reset.
+    await scrollToChoice(page);
+    await expectHotspotOnObject(page, 'blue');
+  });
+
+  test('the wordmark also winds back a film that is still playing', async ({ page }) => {
+    await reachChoice(page);
+    await chooseBranch(page, 'red');
+    await expect(page.locator('html')).toHaveAttribute('data-state', 'red-playing', {
+      timeout: 15_000,
+    });
+
+    await page.getByRole('link', { name: /back to the beginning/i }).click();
+
+    await expect(page.locator('html')).toHaveAttribute('data-state', 'intro', { timeout: 15_000 });
+    const playing = await page.evaluate(
+      () => !document.querySelector<HTMLVideoElement>('#film-red')?.paused,
+    );
+    expect(playing, 'the branch film must not be left running').toBe(false);
+  });
+
   test('hotspots stay glued to their objects across resizes', async ({ page }) => {
     await reachChoice(page);
 

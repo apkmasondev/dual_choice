@@ -18,14 +18,42 @@
      icon, and an app icon laid on a studio photograph reads as a sticker —
      the same thing the ring around the objects was doing. It also said the
      name three times in one corner: mark, wordmark, eyebrow. In the browser
-     tab, where a tile is the right answer, the mark is still the favicon. */
+     tab, where a tile is the right answer, the mark is still the favicon.
+
+     It is also the way back to the first frame, so it wears the same rule as
+     the controls across the stage from it: the chrome is a wordmark and a
+     mark, each with a hairline under it, and nothing else. */
   .brand {
-    display: flex;
+    position: relative;
+    display: inline-flex;
     align-items: center;
+    /* The same reach as the controls opposite, so the corner is as easy to
+       hit as the corner it answers. */
+    min-block-size: 44px;
+    padding-inline-end: var(--space-2xs);
     color: var(--ink);
     font-size: var(--step-small);
     font-weight: 600;
     letter-spacing: var(--tracking-wide);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .brand::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0 var(--space-2xs);
+    inset-block-end: 0.42rem;
+    block-size: 1px;
+    background: currentColor;
+    opacity: 0.24;
+    transition: opacity var(--dur-mid) var(--ease-premium);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .brand:hover::after {
+      opacity: 0.5;
+    }
   }
 
   .control {
