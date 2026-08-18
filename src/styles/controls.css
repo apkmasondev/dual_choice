@@ -1,0 +1,270 @@
+@layer components {
+  /* Sound toggle, SKIP, PLAY PRODUCT FILM and the CTA buttons are one family:
+     same hairline, same radius, same motion. */
+  .chrome {
+    position: absolute;
+    inset-block-start: var(--safe-top);
+    inset-inline: var(--safe-inline);
+    z-index: var(--z-controls);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-s);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--ink);
+    font-size: var(--step-small);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+  }
+
+  .brand__mark {
+    inline-size: 26px;
+    block-size: 26px;
+    flex: none;
+  }
+
+  .control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-block-size: 44px;
+    min-inline-size: 44px;
+    padding: 0.55rem 0.9rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-pill);
+    /* Barely there: a pane of glass laid on the studio, not a filled chip. */
+    background: rgb(255 255 255 / 16%);
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 30%) inset,
+      0 6px 18px rgb(16 20 26 / 6%);
+    color: var(--ink);
+    font-size: var(--step-micro);
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    backdrop-filter: blur(8px) saturate(1.06);
+    transition:
+      background-color var(--dur-fast) var(--ease-premium),
+      border-color var(--dur-fast) var(--ease-premium),
+      box-shadow var(--dur-fast) var(--ease-premium),
+      transform var(--dur-fast) var(--ease-premium);
+  }
+
+  .control svg {
+    inline-size: 18px;
+    block-size: 18px;
+    flex: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .control:hover {
+      background: rgb(255 255 255 / 34%);
+      border-color: var(--hairline-strong);
+      box-shadow:
+        0 1px 0 rgb(255 255 255 / 40%) inset,
+        0 10px 26px rgb(16 20 26 / 10%);
+    }
+  }
+
+  .control:active {
+    transform: scale(0.98);
+  }
+
+  /* --- Sound toggle -----------------------------------------------------
+     A four-bar level meter rather than a speaker glyph: it says "sound is
+     running" without a crossed-out icon, and it is the one small piece of
+     motion the chrome allows itself. State is still carried by aria-pressed
+     and by the label, never by the animation alone.
+     ---------------------------------------------------------------------- */
+  .eq {
+    inline-size: 18px;
+    block-size: 18px;
+    flex: none;
+    overflow: visible;
+  }
+
+  .eq__bar {
+    fill: currentColor;
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    transform: scaleY(0.22);
+    opacity: 0.55;
+    transition:
+      transform var(--dur-mid) var(--ease-premium),
+      opacity var(--dur-mid) var(--ease-premium);
+  }
+
+  .sound-toggle[aria-pressed='true'] .eq__bar {
+    opacity: 1;
+    animation: eq-level 1.5s var(--ease-in-out) infinite;
+  }
+
+  .sound-toggle[aria-pressed='true'] .eq__bar:nth-child(1) {
+    animation-delay: -0.9s;
+  }
+
+  .sound-toggle[aria-pressed='true'] .eq__bar:nth-child(2) {
+    animation-delay: -0.35s;
+  }
+
+  .sound-toggle[aria-pressed='true'] .eq__bar:nth-child(3) {
+    animation-delay: -1.2s;
+  }
+
+  .sound-toggle[aria-pressed='true'] .eq__bar:nth-child(4) {
+    animation-delay: -0.6s;
+  }
+
+  @keyframes eq-level {
+    0%,
+    100% {
+      transform: scaleY(0.26);
+    }
+    50% {
+      transform: scaleY(1);
+    }
+  }
+
+  /* Without motion the meter still has to read as on: hold it at full height. */
+  @media (prefers-reduced-motion: reduce) {
+    .sound-toggle[aria-pressed='true'] .eq__bar {
+      animation: none;
+      transform: scaleY(1);
+    }
+  }
+
+  .sound-toggle[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* The label is decoration next to a well-labelled icon; drop it when the
+     stage is narrow so the target stays a clean circle. */
+  @media (width <= 30rem) {
+    .sound-toggle .control__text {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .sound-toggle {
+      padding: 0.55rem;
+      aspect-ratio: 1;
+    }
+  }
+
+  /* --- Skip / play film ------------------------------------------------- */
+  .skip,
+  .play-film {
+    position: absolute;
+    inset-block-end: calc(var(--safe-bottom) + var(--space-2xs));
+    inset-inline-end: var(--safe-inline);
+    z-index: var(--z-controls);
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity var(--dur-mid) var(--ease-out),
+      transform var(--dur-mid) var(--ease-out);
+  }
+
+  .skip[data-visible='true'],
+  .play-film[data-visible='true'] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .play-film {
+    inset-inline-end: auto;
+    inset-inline-start: var(--safe-inline);
+  }
+
+  /* --- Buttons ---------------------------------------------------------- */
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-block-size: 44px;
+    padding: 0.72rem 1.25rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid transparent;
+    font-size: var(--step-micro);
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition:
+      background-color var(--dur-fast) var(--ease-premium),
+      border-color var(--dur-fast) var(--ease-premium),
+      color var(--dur-fast) var(--ease-premium),
+      box-shadow var(--dur-fast) var(--ease-premium),
+      transform var(--dur-fast) var(--ease-premium);
+  }
+
+  .button__icon {
+    inline-size: 18px;
+    block-size: 18px;
+    flex: none;
+    transition: transform var(--dur-fast) var(--ease-premium);
+  }
+
+  .button--primary {
+    background: var(--ink);
+    color: var(--paper);
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 12%) inset,
+      0 10px 26px rgb(16 20 26 / 18%);
+  }
+
+  .button--ghost {
+    border-color: var(--hairline-strong);
+    color: var(--ink);
+  }
+
+  .button--quiet {
+    color: var(--ink-muted);
+    padding-inline: 0.75rem;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .button--primary:hover {
+      background: var(--ink-strong);
+      transform: translateY(-1px);
+      box-shadow:
+        0 1px 0 rgb(255 255 255 / 16%) inset,
+        0 16px 34px rgb(16 20 26 / 24%);
+    }
+
+    .button--primary:hover .button__icon {
+      transform: translateX(3px);
+    }
+
+    .button--ghost:hover {
+      background: rgb(255 255 255 / 34%);
+      border-color: var(--ink-ghost);
+    }
+
+    .button--quiet:hover {
+      color: var(--ink);
+    }
+
+    .button--quiet:hover .button__icon {
+      transform: rotate(-28deg);
+    }
+  }
+
+  .button:active {
+    transform: translateY(0) scale(0.985);
+  }
+}

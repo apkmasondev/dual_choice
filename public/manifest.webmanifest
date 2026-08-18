@@ -1,0 +1,16 @@
+{
+  "name": "DUAL / CHOICE — APK",
+  "short_name": "DUAL / CHOICE",
+  "description": "An interactive product experience by APK combining cinematic motion, sound and responsive web interaction.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "browser",
+  "theme_color": "#b2b8be",
+  "background_color": "#b2b8be",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

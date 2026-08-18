@@ -1,0 +1,15 @@
+# Normalise line endings so the repo is identical on Windows, macOS and CI.
+* text=auto eol=lf
+
+# Binary media must never be touched.
+*.mp4 binary
+*.m4a binary
+*.opus binary
+*.mp3 binary
+*.wav binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.avif binary
+*.webp binary
+*.ico binary

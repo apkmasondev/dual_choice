@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en" data-state="boot" data-motion="full" data-sound="off">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <title>DUAL / CHOICE — Interactive Product Experience by APK</title>
+    <meta
+      name="description"
+      content="An interactive product experience by APK combining cinematic motion, sound and responsive web interaction."
+    />
+    <meta name="theme-color" content="#b2b8be" />
+    <meta name="color-scheme" content="light" />
+    <!--#canonical-->
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="APK" />
+    <meta property="og:title" content="DUAL / CHOICE — Interactive Product Experience by APK" />
+    <meta
+      property="og:description"
+      content="Two objects. Two outcomes. One interaction. A cinematic, scroll-driven product experience by APK."
+    />
+    <meta property="og:image" content="og/dual-choice-og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="A figure holding a blue crystal and a red sphere, above the words CHOOSE YOUR REALITY."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="DUAL / CHOICE — Interactive Product Experience by APK" />
+    <meta
+      name="twitter:description"
+      content="Two objects. Two outcomes. One interaction. A cinematic, scroll-driven product experience by APK."
+    />
+    <meta name="twitter:image" content="og/dual-choice-og.jpg" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- The poster is the LCP element: it must beat the video decoder to the screen. -->
+    <link
+      rel="preload"
+      as="image"
+      href="/posters/intro-open.avif"
+      type="image/avif"
+      fetchpriority="high"
+    />
+
+    <!--
+      The handful of declarations that have to be right in the very first
+      frame. They live in the lowest cascade layer, so every rule in the real
+      stylesheet still wins; this only covers the gap before it is parsed.
+      Without it the raw markup painted first, and an undecoded <video> — plus
+      the modal dialog's default backdrop — paint black.
+    -->
+    <style>
+      @layer critical, reset, tokens, base, components, states, utilities;
+      @layer critical {
+        html,
+        body {
+          margin: 0;
+          background: #b0b6bc;
+        }
+        video.film,
+        canvas.ambient {
+          opacity: 0;
+        }
+        dialog::backdrop {
+          background: transparent;
+        }
+      }
+    </style>
+
+    <!-- Render-blocking on purpose: the first paint is already styled. -->
+    <link rel="stylesheet" href="/src/styles/index.css" />
+
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#story">Skip to the story</a>
+
+    <!--
+      The scroll map. The stage itself is fixed, so this element is the only
+      thing that gives the document its length; scrolling it drives the film.
+    -->
+    <div class="scroll-track" id="scroll-track" aria-hidden="true"></div>
+
+    <main class="stage" id="stage">
+      <h1 class="u-visually-hidden">DUAL / CHOICE — an interactive product experience by APK</h1>
+
+      <!-- Ambient extension of the studio backdrop; sampled from the film itself. -->
+      <div class="stage__backdrop" aria-hidden="true">
+        <canvas class="ambient" id="ambient" width="96" height="54"></canvas>
+        <div class="ambient__veil"></div>
+      </div>
+
+      <div class="stage__media" id="media-layer">
+        <picture class="poster" id="poster">
+          <source srcset="/posters/intro-open.avif" type="image/avif" />
+          <source srcset="/posters/intro-open.webp" type="image/webp" />
+          <img
+            id="poster-image"
+            src="/posters/intro-open.jpg"
+            alt=""
+            width="1280"
+            height="720"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </picture>
+
+        <video
+          class="film"
+          id="film-intro"
+          data-film="intro"
+          muted
+          playsinline
+          preload="auto"
+          disablepictureinpicture
+          disableremoteplayback
+          aria-hidden="true"
+        ></video>
+        <video
+          class="film"
+          id="film-blue"
+          data-film="blue"
+          muted
+          playsinline
+          preload="metadata"
+          disablepictureinpicture
+          disableremoteplayback
+          aria-hidden="true"
+        ></video>
+        <video
+          class="film"
+          id="film-red"
+          data-film="red"
+          muted
+          playsinline
+          preload="metadata"
+          disablepictureinpicture
+          disableremoteplayback
+          aria-hidden="true"
+        ></video>
+      </div>
+
+      <div class="stage__scrim" aria-hidden="true"></div>
+
+      <!-- Hotspots. Real buttons, positioned from the projected media rect. -->
+      <div class="hotspots" id="hotspots">
+        <button class="hotspot" type="button" id="hotspot-blue" data-branch="blue" tabindex="-1">
+          <span class="hotspot__ring" aria-hidden="true"></span>
+          <span class="hotspot__glow" aria-hidden="true"></span>
+          <span class="hotspot__label">
+            <span class="hotspot__name">CONTROL</span>
+            <span class="hotspot__descriptor">Precision becomes presence.</span>
+            <span class="hotspot__leader" aria-hidden="true"></span>
+          </span>
+        </button>
+        <button class="hotspot" type="button" id="hotspot-red" data-branch="red" tabindex="-1">
+          <span class="hotspot__ring" aria-hidden="true"></span>
+          <span class="hotspot__glow" aria-hidden="true"></span>
+          <span class="hotspot__label">
+            <span class="hotspot__name">DESIRE</span>
+            <span class="hotspot__descriptor">Designed to be felt.</span>
+            <span class="hotspot__leader" aria-hidden="true"></span>
+          </span>
+        </button>
+      </div>
+
+      <div class="chrome">
+        <p class="brand">
+          <svg class="brand__mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+            <rect width="64" height="64" rx="14" fill="currentColor" />
+            <path
+              d="M19 45 32 14 45 45"
+              fill="none"
+              stroke="#fff"
+              stroke-width="6.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M23.5 37H40.5"
+              fill="none"
+              stroke="#fff"
+              stroke-width="5.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          <span class="brand__word">APK</span>
+        </p>
+
+        <button class="control sound-toggle" type="button" id="sound-toggle" aria-pressed="false">
+          <svg class="eq" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <rect class="eq__bar" x="2.6" y="4" width="1.8" height="12" rx="0.9" />
+            <rect class="eq__bar" x="7.1" y="4" width="1.8" height="12" rx="0.9" />
+            <rect class="eq__bar" x="11.6" y="4" width="1.8" height="12" rx="0.9" />
+            <rect class="eq__bar" x="16.1" y="4" width="1.8" height="12" rx="0.9" />
+          </svg>
+          <span class="control__text" id="sound-toggle-text">Sound</span>
+        </button>
+      </div>
+
+      <div class="copy" id="story">
+        <p class="eyebrow" id="eyebrow">APK / INTERACTIVE PRODUCT EXPERIENCE</p>
+
+        <p class="scroll-hint" id="scroll-hint">
+          <span class="scroll-hint__text">SCROLL TO ENTER</span>
+          <span class="scroll-hint__rule" aria-hidden="true"></span>
+        </p>
+
+        <section class="choice-copy" id="choice-copy" aria-labelledby="choice-headline">
+          <h2 class="choice-copy__headline" id="choice-headline">CHOOSE YOUR REALITY.</h2>
+          <p class="choice-copy__support">Two objects. Two outcomes. One interaction.</p>
+        </section>
+
+        <section class="reveal" id="reveal" aria-labelledby="reveal-headline" hidden>
+          <div class="reveal__product">
+            <p class="reveal__kicker" id="reveal-kicker">CONTROL</p>
+            <h2 class="reveal__headline" id="reveal-headline">KNOW EVERY DETAIL.</h2>
+            <p class="reveal__body" id="reveal-body">
+              A product story shaped by precision, motion and interaction.
+            </p>
+          </div>
+
+          <div class="cta" id="cta">
+            <p class="cta__headline">YOUR PRODUCT COULD BE NEXT.</p>
+            <p class="cta__body">
+              APK creates interactive product experiences where film, sound and code become one
+              seamless story.
+            </p>
+            <p class="cta__supporting">
+              Have a launch, product or idea worth remembering? Let&rsquo;s build the moment people
+              won&rsquo;t scroll past.
+            </p>
+            <div class="cta__actions">
+              <a class="button button--primary" id="cta-contact" hidden>
+                <span>START A PROJECT</span>
+                <svg
+                  class="button__icon"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M4 10h11M10.5 5.5 15 10l-4.5 4.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </a>
+              <a class="button button--ghost" id="cta-portfolio" hidden>
+                <span>VIEW MORE WORK</span>
+              </a>
+              <button class="button button--quiet" type="button" id="cta-again">
+                <svg
+                  class="button__icon"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M15.5 8.5A5.75 5.75 0 1 0 16 12" stroke-linecap="round" />
+                  <path d="M15.8 4.6v4h-4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>CHOOSE AGAIN</span>
+              </button>
+            </div>
+            <p class="cta__hint" id="cta-hint" hidden></p>
+          </div>
+        </section>
+      </div>
+
+      <button class="control skip" type="button" id="skip" hidden>
+        <span class="control__text">SKIP</span>
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M4 5.5 10.5 10 4 14.5zM14 5v10" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+
+      <button class="control play-film" type="button" id="play-film" hidden>
+        <span class="control__text">PLAY PRODUCT FILM</span>
+      </button>
+
+      <!--
+        A native <dialog> opened with showModal(): focus containment and
+        inertness of the rest of the page come from the platform rather than
+        from a hand-rolled focus trap.
+      -->
+      <dialog class="entry" id="entry" aria-labelledby="entry-title">
+        <div class="entry__panel">
+          <p class="entry__eyebrow">APK / INTERACTIVE PRODUCT EXPERIENCE</p>
+          <h2 class="entry__title" id="entry-title">ENTER EXPERIENCE</h2>
+          <p class="entry__support">Best with sound. Runs entirely in your browser.</p>
+          <div class="entry__actions">
+            <button class="button button--primary" type="button" id="entry-sound">
+              <span>ENTER WITH SOUND</span>
+            </button>
+            <button class="button button--ghost" type="button" id="entry-muted">
+              <span>CONTINUE MUTED</span>
+            </button>
+          </div>
+        </div>
+      </dialog>
+
+      <p class="u-visually-hidden" id="live-region" role="status" aria-live="polite"></p>
+    </main>
+
+    <noscript>
+      <div class="noscript">
+        <h2>DUAL / CHOICE</h2>
+        <p>
+          This interactive product experience needs JavaScript. The still below is the moment of
+          choice: a blue crystal and a red sphere, one interaction, two outcomes.
+        </p>
+        <img
+          src="/posters/choice.jpg"
+          alt="A kneeling figure holding a blue crystal in one hand and a red sphere in the other."
+          width="1280"
+          height="720"
+        />
+        <p>
+          APK creates interactive product experiences where film, sound and code become one seamless
+          story.
+        </p>
+      </div>
+    </noscript>
+  </body>
+</html>

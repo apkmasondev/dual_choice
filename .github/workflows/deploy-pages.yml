@@ -1,0 +1,86 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; a newer push supersedes an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v6
+
+      # Vite's `base` is never guessed. `configure-pages` reports the real
+      # origin and path this repository publishes under — `/` for a user, org
+      # or custom-domain site and `/<repo>/` for a project site — and that is
+      # what the build uses.
+      # `base_path` is "" for a user, org or custom-domain site and "/<repo>"
+      # for a project site; Vite needs it with a trailing slash.
+      - name: Resolve deployment base
+        id: base
+        env:
+          PAGE_URL: ${{ steps.pages.outputs.base_url }}
+          PAGE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          BASE_PATH="${PAGE_PATH:-/}"
+          [ "${BASE_PATH#/}" = "$BASE_PATH" ] && BASE_PATH="/$BASE_PATH"
+          [ "${BASE_PATH%/}" = "$BASE_PATH" ] && BASE_PATH="$BASE_PATH/"
+          echo "base_path=$BASE_PATH" >> "$GITHUB_OUTPUT"
+          echo "Publishing $PAGE_URL with Vite base '$BASE_PATH'"
+
+      - run: npm ci
+
+      - name: Build
+        env:
+          BASE_PATH: ${{ steps.base.outputs.base_path }}
+          # Outbound CTA destinations. Set these as repository variables; when
+          # they are empty the matching button is not rendered rather than
+          # pointing somewhere that does not exist.
+          VITE_CONTACT_URL: ${{ vars.CONTACT_URL }}
+          VITE_PORTFOLIO_URL: ${{ vars.PORTFOLIO_URL }}
+          VITE_SITE_ORIGIN: ${{ steps.pages.outputs.origin }}
+        run: npm run build
+
+      - name: Report configuration
+        env:
+          VITE_CONTACT_URL: ${{ vars.CONTACT_URL }}
+          VITE_PORTFOLIO_URL: ${{ vars.PORTFOLIO_URL }}
+          VITE_SITE_ORIGIN: ${{ steps.pages.outputs.origin }}
+        run: npm run check:config
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

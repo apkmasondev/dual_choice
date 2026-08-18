@@ -1,0 +1,122 @@
+@layer tokens {
+  :root {
+    /* ---------------------------------------------------------------------
+       Studio palette.
+
+       Sampled from the delivered CHOICE frame, not invented: the film's
+       backdrop is a cool mid-grey, not the near-white the first draft of the
+       plan assumed. Edge means were rgb(182,187,193) at the top, (174,179,183)
+       at the bottom and (152,162,168) at the right, with the brightest region
+       just above centre. Painting the page #f4f6f7 would have left the video
+       sitting on the page as a visible rectangle.
+       --------------------------------------------------------------------- */
+    --studio-050: #ced1d6;
+    --studio-100: #c6c9ce;
+    --studio-200: #b9bec4;
+    --studio-300: #b0b6bc;
+    --studio-400: #a4abb2;
+    --studio-500: #98a2a8;
+    --studio-600: #8b959c;
+
+    --ink: #10141a;
+    --ink-strong: #05070a;
+    /* 4.9:1 on --studio-300; safe for the smallest copy on the stage. */
+    --ink-muted: rgb(16 20 26 / 72%);
+    /* Decorative / large text only. */
+    --ink-faint: rgb(16 20 26 / 52%);
+    --ink-ghost: rgb(16 20 26 / 26%);
+
+    --paper: #eef0f2;
+    --paper-veil: rgb(238 240 242 / 78%);
+
+    /* Object accents, read straight off the crystal core and the sphere's
+       red highlight. Never the sole carrier of meaning. */
+    --accent-blue: #63aec4;
+    --accent-blue-deep: #1d6a85;
+    --accent-red: #c6414a;
+    --accent-red-deep: #8e2b33;
+
+    --hairline: rgb(16 20 26 / 16%);
+    --hairline-strong: rgb(16 20 26 / 30%);
+    --highlight: rgb(255 255 255 / 62%);
+
+    /* --- Space ---------------------------------------------------------- */
+    --space-3xs: 0.25rem;
+    --space-2xs: 0.5rem;
+    --space-xs: 0.75rem;
+    --space-s: 1rem;
+    --space-m: 1.5rem;
+    --space-l: 2.25rem;
+    --space-xl: 3.5rem;
+    --space-2xl: 5rem;
+
+    --gutter: clamp(1.25rem, 4vw, 4rem);
+    --safe-top: max(var(--space-s), env(safe-area-inset-top));
+    --safe-bottom: max(var(--space-s), env(safe-area-inset-bottom));
+    --safe-inline: max(var(--gutter), env(safe-area-inset-left), env(safe-area-inset-right));
+
+    /* --- Type ------------------------------------------------------------ */
+    --font-sans:
+      ui-sans-serif, system-ui, -apple-system, 'Segoe UI Variable Display', 'Segoe UI', Inter,
+      Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    --step-micro: clamp(0.625rem, 0.58rem + 0.2vw, 0.72rem);
+    --step-small: clamp(0.75rem, 0.7rem + 0.24vw, 0.875rem);
+    --step-body: clamp(0.9rem, 0.84rem + 0.34vw, 1.0625rem);
+    --step-lead: clamp(1rem, 0.9rem + 0.6vw, 1.25rem);
+    --step-title: clamp(1.65rem, 1.1rem + 3.2vw, 3.25rem);
+    --step-display: clamp(1.95rem, 1.2rem + 4.4vw, 4rem);
+
+    --tracking-wide: 0.26em;
+    --tracking-label: 0.2em;
+    --tracking-tight: -0.022em;
+
+    /* --- Motion ---------------------------------------------------------- */
+    --ease-premium: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+    --dur-instant: 90ms;
+    --dur-fast: 200ms;
+    --dur-mid: 340ms;
+    --dur-slow: 620ms;
+    --dur-veil: 900ms;
+    /* Dismissals are quicker than arrivals: the entry overlay must clear the
+       film promptly, while its reveal can take its time. */
+    --dur-exit: 420ms;
+
+    --radius-xs: 6px;
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-pill: 999px;
+
+    /* --- Layers (plan section 31) ---------------------------------------- */
+    --z-backdrop: 0;
+    --z-poster: 5;
+    --z-film: 10;
+    --z-overlay: 20;
+    --z-hotspots: 30;
+    --z-copy: 40;
+    --z-controls: 50;
+    --z-entry: 100;
+
+    /* --- Runtime geometry, written by StageLayout ------------------------ */
+    --media-x: 0px;
+    --media-y: 0px;
+    --media-w: 100vw;
+    --media-h: 56.25vw;
+    --media-scale: 1;
+    --space-below-media: 0px;
+    --space-above-media: 0px;
+    --ambient-scale: 20;
+
+    /* Scroll map length. Shorter on phones (plan section 6.1). */
+    --scroll-vh: 340;
+  }
+
+  @media (width <= 780px), (height <= 560px) {
+    :root {
+      --scroll-vh: 280;
+    }
+  }
+}

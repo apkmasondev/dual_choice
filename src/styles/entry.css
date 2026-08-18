@@ -1,0 +1,101 @@
+@layer components {
+  /* One deliberate gesture unlocks audio. The overlay sits on the poster, so
+     the first paint is already the film — not a loading screen. */
+  .entry {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-entry);
+    inline-size: 100%;
+    block-size: 100%;
+    max-inline-size: none;
+    max-block-size: none;
+    border: 0;
+    color: var(--ink);
+    padding: var(--safe-top) var(--safe-inline) var(--safe-bottom);
+    background: linear-gradient(to bottom, rgb(190 195 200 / 62%), rgb(176 182 188 / 78%));
+    backdrop-filter: blur(2px) saturate(1.02);
+    /*
+      Everything except `display` and `opacity` lives here rather than on
+      `[open]`.
+
+      `allow-discrete` keeps the dialog painted for the whole exit transition,
+      but the `[open]` selector stops matching the instant `close()` runs. Any
+      layout property parked on `[open]` therefore vanishes a frame after the
+      click while the element is still on screen: centring was lost, the panel
+      stretched to the full grid cell and the pill buttons became tall dark
+      ellipses. Keeping the layout unconditional makes the exit a pure fade.
+    */
+    place-items: center;
+    opacity: 0;
+    transition:
+      opacity var(--dur-exit) var(--ease-out),
+      display var(--dur-exit) allow-discrete,
+      overlay var(--dur-exit) allow-discrete;
+  }
+
+  /* Only the two properties that genuinely differ between open and closed. */
+  .entry[open] {
+    display: grid;
+    opacity: 1;
+    /* Slow, deliberate arrival; the exit above stays short so the dialog gets
+       out of the way of the film. */
+    transition-duration: var(--dur-veil);
+  }
+
+  @starting-style {
+    .entry[open] {
+      opacity: 0;
+    }
+  }
+
+  .entry::backdrop {
+    background: transparent;
+  }
+
+  .entry__panel {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2xs);
+    text-align: center;
+    max-inline-size: 34rem;
+    /* Same rule: the resting transform is the *open* one, so losing `[open]`
+       on close cannot re-introduce an offset mid-fade. */
+    transform: none;
+    transition: transform var(--dur-veil) var(--ease-out);
+  }
+
+  @starting-style {
+    .entry[open] .entry__panel {
+      transform: translateY(10px);
+    }
+  }
+
+  .entry__eyebrow {
+    font-size: var(--step-micro);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .entry__title {
+    font-size: var(--step-title);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: var(--tracking-tight);
+    margin-block-start: var(--space-2xs);
+  }
+
+  .entry__support {
+    font-size: var(--step-small);
+    color: var(--ink-muted);
+  }
+
+  .entry__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2xs);
+    margin-block-start: var(--space-m);
+  }
+}

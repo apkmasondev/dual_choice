@@ -1,0 +1,238 @@
+@layer components {
+  /* The stage never scrolls. The scroll track moves underneath it, which keeps
+     the film, the hotspots and the copy in one stable coordinate system —
+     nothing can slide out of alignment mid-gesture. */
+  .stage {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: 100%;
+    /* dvh, so the stage grows when the mobile chrome retracts; the layout pass
+       reprojects the film and the hotspots together in the same frame. */
+    block-size: 100dvh;
+    overflow: clip;
+    isolation: isolate;
+    /* Fallback studio backdrop, matched to the sampled frame. Visible before
+       the ambient canvas has anything to show, and whenever it is disabled. */
+    background: radial-gradient(
+      118% 92% at 50% 26%,
+      #c9ccd1 0%,
+      #b8bec4 42%,
+      #a7aeb5 74%,
+      #98a2a8 100%
+    );
+  }
+
+  .stage__backdrop {
+    position: absolute;
+    inset: 0;
+    overflow: clip;
+  }
+
+  .stage__media {
+    position: absolute;
+    inset: 0;
+    /* At the reveal the film settles into the upper part of the stage so the
+       sales copy gets clean space instead of sitting on top of the product.
+       Transform only — no layout is animated, and the hotspots are long gone
+       by the time this runs. */
+    transform-origin: 50% 0%;
+    transform: translateY(var(--reveal-shift, 0px)) scale(var(--reveal-zoom, 1));
+    transition: transform 760ms var(--ease-out);
+  }
+
+  /*
+    Card reveal.
+
+    The film has drawn back inside the stage, so it is given corners and a very
+    soft, very large shadow — enough to read as a pane of glass lifted off the
+    studio wall, not as a UI panel. The radius is divided by the live zoom so
+    the corner lands at the same optical size whatever the scale.
+  */
+  .stage[data-reveal-fit='card'] .film,
+  .stage[data-reveal-fit='card'] .poster {
+    border-radius: calc(18px / var(--reveal-zoom, 1));
+    overflow: clip;
+    box-shadow:
+      0 calc(2px / var(--reveal-zoom, 1)) calc(4px / var(--reveal-zoom, 1)) rgb(16 20 26 / 4%),
+      0 calc(26px / var(--reveal-zoom, 1)) calc(70px / var(--reveal-zoom, 1)) rgb(16 20 26 / 13%);
+  }
+
+  .stage[data-reveal-fit='card'] .film,
+  .stage[data-reveal-fit='card'] .poster,
+  .stage[data-reveal-fit='shifted'] .film,
+  .stage[data-reveal-fit='shifted'] .poster {
+    transition:
+      opacity 140ms linear,
+      border-radius 760ms var(--ease-out),
+      box-shadow 760ms var(--ease-out);
+  }
+
+  /* A film that shrank without fitting inside the stage keeps hard edges on the
+     axis that still overflows, so those are feathered instead. */
+  .stage[data-reveal-fit='shifted'] .stage__media {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 22px,
+      #000 calc(100% - 22px),
+      transparent 100%
+    );
+  }
+
+  /* ---------------------------------------------------------------------
+     Ambient backdrop.
+
+     A 96x54 canvas is repainted from the current video frame and stretched
+     over the stage. Because the source is the film itself, the light behind
+     the frame always matches the light inside it — unlike a second full-size
+     blurred <video>, which would double the decode cost for the same result.
+
+     There is deliberately no CSS `filter` here. Chromium rasterises a filter
+     at the *composited* scale, so blurring this element after a 20x scale-up
+     meant blurring a full-viewport surface every frame: measured at 3.8 fps
+     on a 2560x1080 stage. The softening is done inside the 5000-pixel canvas
+     instead, and the browser's bilinear upscale does the rest for free.
+     --------------------------------------------------------------------- */
+  .ambient {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    max-inline-size: none;
+    z-index: var(--z-backdrop);
+    opacity: 0;
+    transition: opacity var(--dur-slow) var(--ease-out);
+  }
+
+  :root[data-ambient='on'] .ambient {
+    opacity: 1;
+  }
+
+  /*
+    Settles the far end of the ambient bands back to neutral studio tone.
+
+    The extension is exact at the join — that is what hides the seam — but it
+    keeps carrying whatever is at the frame's edge. On the RED final frame that
+    edge holds the earbuds' reflection in the floor, which smeared a red haze
+    across the sales copy. The stops are driven by the live media rect, so the
+    wash starts only where the frame ends and collapses to nothing when the
+    film is full-bleed.
+  */
+  .ambient__veil {
+    position: absolute;
+    inset: 0;
+    z-index: calc(var(--z-backdrop) + 1);
+    pointer-events: none;
+    background:
+      linear-gradient(
+        to bottom,
+        rgb(184 189 195 / 80%) 0,
+        rgb(184 189 195 / 0%) calc(var(--frame-y, 0px) * 0.92),
+        rgb(176 182 188 / 0%) calc(var(--frame-y, 0px) + var(--frame-h, 100%) + 24px),
+        rgb(176 182 188 / 84%) 100%
+      ),
+      radial-gradient(140% 110% at 50% 50%, rgb(16 20 26 / 0%) 55%, rgb(16 20 26 / 8%) 100%);
+  }
+
+  /* ---------------------------------------------------------------------
+     Poster and films share one geometry, written by StageLayout from the
+     projection module. The element box is built at the exact source aspect
+     ratio, so `object-fit` has nothing left to decide — there is no second
+     implementation of the fit maths anywhere.
+     --------------------------------------------------------------------- */
+  .poster,
+  .film {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: var(--media-w);
+    block-size: var(--media-h);
+    /* The generic media reset caps replaced elements at 100% of their
+       container. Here the size *is* the projection result and is allowed to
+       overflow the stage — capping it would silently render the film at a
+       different scale from the one the hotspots are placed with. */
+    max-inline-size: none;
+    max-block-size: none;
+    transform: translate3d(var(--media-x), var(--media-y), 0);
+  }
+
+  .poster {
+    z-index: var(--z-poster);
+    opacity: 1;
+    transition: opacity var(--dur-mid) var(--ease-out);
+  }
+
+  .poster img {
+    inline-size: 100%;
+    block-size: 100%;
+    max-inline-size: none;
+    object-fit: fill;
+  }
+
+  .film {
+    z-index: var(--z-film);
+    object-fit: fill;
+    opacity: 0;
+    /* Only ever crossfaded between frames that are already near-identical, so
+       this stays short enough to read as a cut rather than a dissolve. */
+    transition: opacity 140ms linear;
+    pointer-events: none;
+  }
+
+  .film[data-active='true'] {
+    opacity: 1;
+  }
+
+  /* Once a film is showing, the poster underneath it is redundant. */
+  :root[data-poster='hidden'] .poster {
+    opacity: 0;
+  }
+
+  /* Seats the copy without hiding the subject: the strong part of the gradient
+     starts below the objects and the hands. */
+  .stage__scrim {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-overlay);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--dur-slow) var(--ease-out);
+    background: linear-gradient(
+      to bottom,
+      rgb(178 184 190 / 0%) 0%,
+      rgb(178 184 190 / 0%) 54%,
+      rgb(180 186 192 / 46%) 74%,
+      rgb(178 184 190 / 82%) 88%,
+      rgb(176 182 188 / 94%) 100%
+    );
+  }
+
+  :root[data-state='choice'] .stage__scrim,
+  :root[data-state='branch-loading'] .stage__scrim,
+  :root[data-state='returning'] .stage__scrim {
+    opacity: 0.75;
+  }
+
+  :root[data-state='red-reveal'] .stage__scrim,
+  :root[data-state='blue-reveal'] .stage__scrim {
+    opacity: 1;
+  }
+
+  /* When the copy sits in the ambient band there is nothing to veil. */
+  .stage[data-copy-placement='below'] .stage__scrim {
+    opacity: 0 !important;
+  }
+
+  /* A stage too short to give the panel its own room — a landscape phone, say.
+     Rather than let the copy fight the product, the whole frame steps back. */
+  .stage[data-reveal-fit='crowded'] .stage__scrim {
+    opacity: 1 !important;
+    background: linear-gradient(
+      to bottom,
+      rgb(182 188 194 / 62%) 0%,
+      rgb(180 186 192 / 80%) 34%,
+      rgb(178 184 190 / 92%) 100%
+    );
+  }
+}

@@ -1,0 +1,20 @@
+/*
+ * Stylesheet entry point.
+ *
+ * Referenced with a <link> from index.html rather than imported from main.ts.
+ * A JS-imported stylesheet is injected only once the module graph has run, so
+ * the first paint showed raw markup — three undecoded <video> elements render
+ * as black rectangles, which is exactly the flash this avoids. As a <link> the
+ * CSS is render-blocking in dev and in the production build alike.
+ */
+@layer reset, tokens, base, components, states, utilities;
+
+@import './reset.css';
+@import './tokens.css';
+@import './base.css';
+@import './stage.css';
+@import './choice.css';
+@import './copy.css';
+@import './controls.css';
+@import './entry.css';
+@import './reduced-motion.css';

@@ -1,0 +1,60 @@
+@layer states {
+  /*
+    Reduced motion is a full variant of the experience, not a stripped page:
+    the visitor still sees both objects, still chooses, still reads the product
+    copy and still reaches the CTA. What goes away is scroll-driven camera
+    movement, drifting copy and looping decoration — and an explicit
+    "PLAY PRODUCT FILM" button puts the film back under their control.
+  */
+  :root[data-motion='reduced'] .scroll-track {
+    block-size: 100svh;
+  }
+
+  :root[data-motion='reduced'] .scroll-hint {
+    display: none;
+  }
+
+  :root[data-motion='reduced'] .scroll-hint__rule {
+    animation: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    /* Cross-dissolves are the one motion kept: an instant cut between the
+       poster and the film reads as a flash, which is worse. */
+    .poster,
+    .film,
+    .entry,
+    .stage__scrim,
+    .choice-copy,
+    .hotspots,
+    .reveal__kicker,
+    .reveal__headline,
+    .reveal__body,
+    .cta {
+      transition-duration: 260ms !important;
+      transition-property: opacity !important;
+    }
+
+    .hotspot,
+    .hotspot__label {
+      transform: translate3d(var(--x, 0px), var(--y, 0px), 0) translate(-50%, -50%);
+    }
+
+    .hotspot__label {
+      transform: translate(calc(-50% + var(--label-dx, 0px)), calc(-50% + var(--label-dy, -80px)));
+    }
+
+    .stage__media {
+      transition: none !important;
+    }
+  }
+}

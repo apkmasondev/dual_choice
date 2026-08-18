@@ -1,0 +1,11 @@
+dist/
+coverage/
+node_modules/
+public/media/
+public/posters/
+public/og/
+package-lock.json
+media-report.json
+playwright-report/
+test-results/
+APK_DUAL_CHOICE_PLAN.md

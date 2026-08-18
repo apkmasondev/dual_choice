@@ -1,0 +1,36 @@
+node_modules/
+dist/
+coverage/
+.vite/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# Media pipeline report (regenerate with `npm run media:verify`)
+media-report.json
+
+# Local env
+.env
+.env.local
+.env.*.local
+
+# OS / editors
+.DS_Store
+Thumbs.db
+*.log
+
+# NOTE: public/media, public/posters and the generated icons ARE committed on
+# purpose. `npm ci && npm run build` must produce a deployable site without
+# ffmpeg. Masters live in assets/ and never reach dist/.
+
+# Source masters. ~50 MB of raw film and audio the published site never loads.
+# public/media holds the encoded variants and those ARE committed, so
+# `npm ci && npm run build` produces a deployable site without them. Keep the
+# masters next to the repo to be able to re-run `npm run media`.
+assets/
+
+# Working specification, not part of the deliverable.
+APK_DUAL_CHOICE_PLAN.md

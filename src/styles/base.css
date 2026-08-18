@@ -1,0 +1,103 @@
+@layer base {
+  html {
+    background: var(--studio-300);
+    color-scheme: light;
+    /*
+      The scroll bar is the only piece of browser furniture that sits inside
+      this composition, and it tracks a film rather than a document. The scroll
+      affordance is carried by the "SCROLL TO ENTER" cue instead, and Page
+      Down, arrows and space all still work.
+    */
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar {
+    inline-size: 0;
+    block-size: 0;
+  }
+
+  body {
+    min-block-size: 100svh;
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--step-body);
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--studio-300);
+    /* The stage is fixed; only the scroll track may extend the page. */
+    overflow-x: clip;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Gives the document its scrollable length. `svh` keeps it stable while the
+     mobile browser chrome slides in and out, so progress never jumps. */
+  .scroll-track {
+    block-size: calc(var(--scroll-vh) * 1svh);
+    inline-size: 100%;
+    pointer-events: none;
+  }
+
+  .skip-link {
+    position: fixed;
+    inset-block-start: var(--safe-top);
+    inset-inline-start: var(--safe-inline);
+    z-index: calc(var(--z-entry) + 10);
+    padding: 0.7rem 1.1rem;
+    border-radius: var(--radius-sm);
+    background: var(--ink);
+    color: #fff;
+    font-size: var(--step-small);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    transform: translateY(-160%);
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+
+  .skip-link:focus-visible {
+    transform: translateY(0);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ink-strong);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .noscript {
+    max-inline-size: 62ch;
+    margin-inline: auto;
+    padding: var(--space-xl) var(--gutter);
+    display: grid;
+    gap: var(--space-m);
+  }
+
+  .noscript h2 {
+    font-size: var(--step-title);
+    letter-spacing: var(--tracking-tight);
+    font-weight: 600;
+  }
+
+  .noscript img {
+    inline-size: 100%;
+    block-size: auto;
+    border-radius: var(--radius-md);
+  }
+}
+
+@layer utilities {
+  .u-visually-hidden {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+}

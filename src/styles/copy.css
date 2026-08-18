@@ -1,0 +1,306 @@
+@layer components {
+  .copy {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-copy);
+    pointer-events: none;
+  }
+
+  .copy > * {
+    pointer-events: auto;
+  }
+
+  /* --- Intro ------------------------------------------------------------ */
+  .eyebrow {
+    position: absolute;
+    inset-block-start: calc(var(--safe-top) + 3.1rem);
+    inset-inline-start: var(--safe-inline);
+    /* One line reads as a masthead; wrapped it read as a cramped block. */
+    inline-size: max-content;
+    max-inline-size: calc(100vw - var(--safe-inline) * 2);
+    font-size: var(--step-micro);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+  }
+
+  :root[data-state='intro'] .eyebrow {
+    opacity: 1;
+    transform: none;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    inset-block-end: calc(var(--safe-bottom) + var(--space-s));
+    inset-inline-start: 50%;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2xs);
+    font-size: var(--step-micro);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    transform: translateX(-50%);
+    /* Fades out as the film advances, so it never competes with the objects. */
+    opacity: calc(1 - var(--intro-progress, 0) * 2.6);
+    transition: opacity var(--dur-mid) linear;
+  }
+
+  :root:not([data-state='intro']) .scroll-hint {
+    opacity: 0;
+    transition: opacity var(--dur-fast) linear;
+  }
+
+  .scroll-hint__rule {
+    inline-size: 1px;
+    block-size: 34px;
+    background: linear-gradient(to bottom, var(--hairline-strong), transparent);
+    animation: scroll-hint-breathe 2.6s var(--ease-in-out) infinite;
+  }
+
+  @keyframes scroll-hint-breathe {
+    0%,
+    100% {
+      transform: scaleY(0.55);
+      transform-origin: top;
+      opacity: 0.5;
+    }
+    50% {
+      transform: scaleY(1);
+      transform-origin: top;
+      opacity: 1;
+    }
+  }
+
+  /* --- Choice ----------------------------------------------------------- */
+  .choice-copy {
+    position: absolute;
+    display: grid;
+    gap: var(--space-2xs);
+    max-inline-size: 26ch;
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+  }
+
+  :root[data-state='choice'] .choice-copy,
+  :root[data-state='returning'] .choice-copy {
+    opacity: 1;
+    transform: none;
+    transition-delay: 220ms;
+  }
+
+  :root[data-state='branch-loading'] .choice-copy {
+    opacity: 0;
+    transform: translateY(-6px);
+    transition-duration: var(--dur-fast);
+  }
+
+  .choice-copy__headline {
+    font-size: var(--step-title);
+    font-weight: 600;
+    line-height: 0.98;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .choice-copy__support {
+    font-size: var(--step-small);
+    color: var(--ink-muted);
+    letter-spacing: 0.01em;
+  }
+
+  /* Portrait: the copy lives in the ambient band under the film, where there
+     is nothing to cover. Landscape/desktop: bottom-left, on the studio floor,
+     clear of the face, the hands and both objects. */
+  .stage[data-copy-placement='below'] .choice-copy {
+    inset-inline: var(--safe-inline);
+    inset-block-start: calc(var(--media-y) + var(--media-h) + var(--space-m));
+    justify-items: center;
+    text-align: center;
+    max-inline-size: none;
+    margin-inline: auto;
+  }
+
+  .stage[data-copy-placement='overlay'] .choice-copy {
+    inset-inline-start: var(--safe-inline);
+    inset-block-end: calc(var(--safe-bottom) + var(--space-s));
+  }
+
+  /* --- Reveal ----------------------------------------------------------- */
+  .reveal {
+    position: absolute;
+    inset-inline: var(--safe-inline);
+    inset-block-end: calc(var(--safe-bottom) + var(--space-2xs));
+    display: grid;
+    gap: var(--space-m) var(--space-2xl);
+    align-items: end;
+    max-inline-size: 84rem;
+    margin-inline: auto;
+  }
+
+  /* Two columns on a wide stage — and also on a short, wide one, where a
+     single stacked column would be taller than a landscape phone. */
+  @media (width >= 62rem), ((min-aspect-ratio: 3 / 2) and (height <= 620px)) {
+    .reveal {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    }
+  }
+
+  .reveal__kicker,
+  .reveal__headline,
+  .reveal__body,
+  .cta {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+  }
+
+  :root[data-state='red-reveal'] :is(.reveal__kicker, .reveal__headline, .reveal__body, .cta),
+  :root[data-state='blue-reveal'] :is(.reveal__kicker, .reveal__headline, .reveal__body, .cta) {
+    opacity: 1;
+    transform: none;
+  }
+
+  :root[data-state='red-reveal'] .reveal__kicker,
+  :root[data-state='blue-reveal'] .reveal__kicker {
+    transition-delay: 80ms;
+  }
+
+  :root[data-state='red-reveal'] .reveal__headline,
+  :root[data-state='blue-reveal'] .reveal__headline {
+    transition-delay: 180ms;
+  }
+
+  :root[data-state='red-reveal'] .reveal__body,
+  :root[data-state='blue-reveal'] .reveal__body {
+    transition-delay: 300ms;
+  }
+
+  :root[data-state='red-reveal'] .cta,
+  :root[data-state='blue-reveal'] .cta {
+    transition-delay: 620ms;
+  }
+
+  .reveal__kicker {
+    font-size: var(--step-micro);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+  }
+
+  .reveal__kicker::before {
+    content: '';
+    inline-size: 26px;
+    block-size: 2px;
+    border-radius: 2px;
+    background: var(--branch-accent, var(--ink-ghost));
+  }
+
+  :root[data-branch='blue'] {
+    --branch-accent: var(--accent-blue);
+  }
+
+  :root[data-branch='red'] {
+    --branch-accent: var(--accent-red);
+  }
+
+  .reveal__headline {
+    font-size: var(--step-display);
+    font-weight: 600;
+    line-height: 0.94;
+    letter-spacing: var(--tracking-tight);
+    margin-block-start: var(--space-2xs);
+  }
+
+  .reveal__body {
+    font-size: var(--step-lead);
+    color: var(--ink-muted);
+    max-inline-size: 34ch;
+    margin-block-start: var(--space-xs);
+  }
+
+  /* --- Final CTA -------------------------------------------------------- */
+  .cta {
+    display: grid;
+    gap: var(--space-2xs);
+    padding-block-start: var(--space-s);
+    border-block-start: 1px solid var(--hairline);
+  }
+
+  @media (width >= 62rem), ((min-aspect-ratio: 3 / 2) and (height <= 620px)) {
+    .cta {
+      border-block-start: 0;
+      border-inline-start: 1px solid var(--hairline);
+      padding-block-start: 0;
+      padding-inline-start: var(--space-l);
+    }
+  }
+
+  .cta__headline {
+    font-size: var(--step-lead);
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .cta__body,
+  .cta__supporting {
+    font-size: var(--step-small);
+    color: var(--ink-muted);
+    max-inline-size: 46ch;
+  }
+
+  .cta__supporting {
+    color: var(--ink-faint);
+  }
+
+  .cta__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+    margin-block-start: var(--space-xs);
+  }
+
+  .cta__hint {
+    font-size: var(--step-micro);
+    color: var(--ink-faint);
+    letter-spacing: 0.02em;
+  }
+
+  /* Short screens tighten the rhythm rather than dropping copy: a
+     reduced-height visitor still gets the whole sales message. The film is
+     scaled back at the reveal to make the room (see StageLayout). */
+  @media (height <= 760px) and (width <= 62rem) {
+    .reveal {
+      gap: var(--space-xs);
+    }
+
+    .reveal__headline {
+      font-size: clamp(1.6rem, 7vw, 2.2rem);
+    }
+
+    .reveal__body {
+      margin-block-start: var(--space-3xs);
+      font-size: var(--step-small);
+    }
+
+    .cta {
+      gap: var(--space-3xs);
+      padding-block-start: var(--space-2xs);
+    }
+  }
+}

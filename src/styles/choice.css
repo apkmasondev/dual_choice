@@ -1,0 +1,237 @@
+@layer components {
+  .hotspots {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-hotspots);
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      visibility 0s linear var(--dur-slow);
+  }
+
+  :root[data-state='choice'] .hotspots,
+  :root[data-state='branch-loading'] .hotspots {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity var(--dur-slow) var(--ease-out) 120ms,
+      visibility 0s;
+  }
+
+  :root[data-state='choice'] .hotspots {
+    pointer-events: auto;
+  }
+
+  .hotspot {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: var(--hit, 88px);
+    block-size: var(--hit, 88px);
+    display: grid;
+    place-items: center;
+    pointer-events: auto;
+    color: var(--ink);
+    /* Position is set from the projected media rect and is never transitioned:
+       on resize the anchor must move with the frame in the same paint, not
+       glide towards it (plan section 22). */
+    transform: translate3d(var(--x, 0px), var(--y, 0px), 0) translate(-50%, -50%);
+    border-radius: 50%;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .hotspot[data-branch='blue'] {
+    --accent: var(--accent-blue);
+    --accent-deep: var(--accent-blue-deep);
+  }
+
+  .hotspot[data-branch='red'] {
+    --accent: var(--accent-red);
+    --accent-deep: var(--accent-red-deep);
+  }
+
+  /* The visible mark. Deliberately not an outline around the object: a hairline
+     circle plus a whisper of light, so it reads as part of the shot. */
+  .hotspot__ring {
+    position: absolute;
+    inline-size: var(--ring, 56px);
+    block-size: var(--ring, 56px);
+    border-radius: 50%;
+    border: 1px solid rgb(16 20 26 / 22%);
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 22%) inset,
+      0 6px 20px rgb(16 20 26 / 8%);
+    transition:
+      transform var(--dur-fast) var(--ease-premium),
+      border-color var(--dur-fast) var(--ease-premium),
+      box-shadow var(--dur-fast) var(--ease-premium);
+  }
+
+  .hotspot__glow {
+    position: absolute;
+    inline-size: calc(var(--ring, 56px) * 1.9);
+    block-size: calc(var(--ring, 56px) * 1.9);
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--accent) 24%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 8%, transparent) 42%,
+      transparent 68%
+    );
+    opacity: 0;
+    transform: scale(0.86);
+    transition:
+      opacity var(--dur-fast) var(--ease-premium),
+      transform var(--dur-fast) var(--ease-premium);
+  }
+
+  .hotspot__label {
+    position: absolute;
+    inset-inline-start: 50%;
+    inset-block-start: 50%;
+    display: grid;
+    justify-items: center;
+    gap: 0.28em;
+    inline-size: max-content;
+    max-inline-size: min(44vw, 24ch);
+    text-align: center;
+    transform: translate(calc(-50% + var(--label-dx, 0px)), calc(-50% + var(--label-dy, -80px)));
+    transition: transform var(--dur-fast) var(--ease-premium);
+  }
+
+  .hotspot__name {
+    font-size: var(--step-small);
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+
+  .hotspot__descriptor {
+    font-size: var(--step-micro);
+    letter-spacing: 0.04em;
+    color: var(--ink-muted);
+    opacity: 0.72;
+    transition: opacity var(--dur-fast) var(--ease-premium);
+  }
+
+  /* Editorial tick joining label to object; fixed length so it never depends
+     on the projection scale. */
+  .hotspot__leader {
+    inline-size: 1px;
+    block-size: 16px;
+    margin-block-start: 0.35em;
+    background: linear-gradient(to bottom, var(--hairline-strong), transparent);
+  }
+
+  /* --- Desktop hover --------------------------------------------------- */
+  @media (hover: hover) and (pointer: fine) {
+    .hotspot:hover .hotspot__ring {
+      transform: scale(1.08);
+      border-color: color-mix(in srgb, var(--accent-deep) 46%, transparent);
+    }
+
+    .hotspot:hover .hotspot__glow {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .hotspot:hover .hotspot__label {
+      transform: translate(
+        calc(-50% + var(--label-dx, 0px)),
+        calc(-50% + var(--label-dy, -80px) - 5px)
+      );
+    }
+
+    .hotspot:hover .hotspot__descriptor {
+      opacity: 1;
+    }
+  }
+
+  /* --- Touch press ------------------------------------------------------ */
+  .hotspot[data-pressed='true'] .hotspot__ring {
+    transform: scale(0.96);
+    transition-duration: var(--dur-instant);
+  }
+
+  /* --- Keyboard focus: louder than hover, and legible without colour ---- */
+  .hotspot:focus-visible {
+    outline: none;
+  }
+
+  .hotspot:focus-visible .hotspot__ring {
+    border-color: var(--ink-strong);
+    box-shadow:
+      0 0 0 2px var(--paper),
+      0 0 0 4px var(--ink-strong),
+      0 8px 26px rgb(16 20 26 / 14%);
+    transform: scale(1.06);
+  }
+
+  .hotspot:focus-visible .hotspot__glow {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .hotspot:focus-visible .hotspot__descriptor {
+    opacity: 1;
+  }
+
+  /* --- Selected + loading ---------------------------------------------- */
+  .hotspot[data-selected='true'] .hotspot__ring {
+    animation: hotspot-commit 460ms var(--ease-out) forwards;
+    border-color: color-mix(in srgb, var(--accent-deep) 70%, transparent);
+  }
+
+  .hotspot[data-selected='true'] .hotspot__glow {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+
+  /* The unchosen object steps back immediately, so the commitment is legible
+     before any film starts. */
+  .hotspot[data-dimmed='true'] {
+    opacity: 0;
+    transform: translate3d(var(--x, 0px), var(--y, 0px), 0) translate(-50%, -50%) scale(0.94);
+    transition:
+      opacity var(--dur-mid) var(--ease-out),
+      transform var(--dur-mid) var(--ease-out);
+    pointer-events: none;
+  }
+
+  .hotspot[data-selected='true'] .hotspot__label,
+  .hotspot[data-loading='true'] .hotspot__label {
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+
+  .hotspot[data-loading='true'] .hotspot__ring::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    border-block-start-color: var(--ink-strong);
+    animation: hotspot-spin 900ms linear infinite;
+  }
+
+  @keyframes hotspot-commit {
+    0% {
+      transform: scale(1);
+    }
+    38% {
+      transform: scale(1.16);
+    }
+    100% {
+      transform: scale(1.02);
+    }
+  }
+
+  @keyframes hotspot-spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+}
