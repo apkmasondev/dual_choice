@@ -43,7 +43,18 @@ export class AmbientBackdrop {
     this.#canvas = canvas;
     this.#stage = stage;
     this.#minIntervalMs = options.minIntervalMs ?? 90;
-    this.#context = canvas.getContext('2d', { alpha: false, desynchronized: true });
+    /*
+      Deliberately not `desynchronized`.
+
+      That flag takes the canvas off the page's paint cycle so it can present
+      as soon as it is drawn — worth it for pen ink, worthless for a wash
+      repainted ten times a second, and it allows a partially updated surface
+      to reach the screen. Stretched twenty times over the stage, a partial
+      update is a band of the previous frame down one side: a momentary darker
+      distortion that lands left or right at random and never appears in a
+      screenshot, because captures go through the ordinary composite path.
+    */
+    this.#context = canvas.getContext('2d', { alpha: false });
     if (this.#context) {
       this.#context.filter = 'blur(1.8px)';
       this.#context.imageSmoothingEnabled = true;
@@ -150,6 +161,19 @@ export class AmbientBackdrop {
     style.setProperty('--frame-y', `${(frameBox.y - stageBox.y).toFixed(1)}px`);
     style.setProperty('--frame-w', `${frameBox.width.toFixed(1)}px`);
     style.setProperty('--frame-h', `${frameBox.height.toFixed(1)}px`);
+
+    /*
+      The whole frame, squashed over the whole canvas, under everything else.
+
+      The canvas is opaque and never cleared, so any pixel the bands below do
+      not reach keeps whatever was painted there in some earlier geometry —
+      and the band guards skip a gap narrower than half a canvas pixel, which
+      is ten screen pixels once this is stretched over the stage. Underpainting
+      costs one draw into five thousand pixels and makes a stale pixel
+      impossible: what shows through a sliver at the left edge is the frame's
+      own left edge, which is what belongs there anyway.
+    */
+    context.drawImage(element, 0, 0, sourceWidth, sourceHeight, 0, 0, canvasWidth, canvasHeight);
 
     const edge = Math.min(AmbientBackdrop.EDGE_SAMPLE, sourceHeight, sourceWidth);
     // A pixel of overlap on every join hides any rounding seam.
