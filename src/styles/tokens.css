@@ -40,6 +40,18 @@
     --hairline-strong: rgb(16 20 26 / 30%);
     --highlight: rgb(255 255 255 / 62%);
 
+    /* The rule the piece is built on: it opens the entry panel and closes the
+       reveal card. Weighted to the left, where the label sits, and fading out
+       to the right so it reads as drawn rather than as a border. */
+    --rule-line: linear-gradient(
+      to right,
+      var(--hairline-strong) 0%,
+      var(--hairline) 46%,
+      rgb(16 20 26 / 8%) 100%
+    );
+    /* Length of the accent cap that signs a rule at its head. */
+    --rule-cap: 68px;
+
     /* --- Space ---------------------------------------------------------- */
     --space-3xs: 0.25rem;
     --space-2xs: 0.5rem;
@@ -56,9 +68,10 @@
     --safe-inline: max(var(--gutter), env(safe-area-inset-left), env(safe-area-inset-right));
 
     /* --- Type ------------------------------------------------------------ */
+    /* Archivo carries the piece; the system stack only covers the swap. */
     --font-sans:
-      ui-sans-serif, system-ui, -apple-system, 'Segoe UI Variable Display', 'Segoe UI', Inter,
-      Roboto, 'Helvetica Neue', Arial, sans-serif;
+      'Archivo Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI Variable Display',
+      'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
     --step-micro: clamp(0.625rem, 0.58rem + 0.2vw, 0.72rem);
     --step-small: clamp(0.75rem, 0.7rem + 0.24vw, 0.875rem);

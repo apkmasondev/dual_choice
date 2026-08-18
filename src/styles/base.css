@@ -62,6 +62,14 @@
     outline-offset: 3px;
   }
 
+  /* Rules draw themselves in, left to right. Shared by the entry panel and
+     the reveal card, so the piece opens and closes on the same gesture. */
+  @keyframes rule-draw {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
   ::selection {
     background: var(--ink);
     color: var(--paper);

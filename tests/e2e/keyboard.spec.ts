@@ -10,7 +10,11 @@ test.describe('keyboard only', () => {
     await gotoExperience(page);
 
     // The modal entry dialog takes focus and contains it: nothing behind it
-    // is reachable with Tab.
+    // is reachable with Tab. Focus opens on the panel rather than the first
+    // button, so a visitor who arrived with a mouse is not shown a focus ring
+    // before they have touched a key; Tab still walks both buttons.
+    await expect(page.locator('#entry .entry__panel')).toBeFocused();
+    await page.keyboard.press('Tab');
     await expect(page.getByRole('button', { name: 'ENTER WITH SOUND' })).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(page.getByRole('button', { name: 'CONTINUE MUTED' })).toBeFocused();

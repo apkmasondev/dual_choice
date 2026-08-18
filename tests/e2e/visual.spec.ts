@@ -20,6 +20,9 @@ test.describe('visual reference', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
 
     await gotoExperience(page);
+    // The gate arrives over 900 ms and its rule draws itself in after that;
+    // a still taken on `ready` catches the fade, not the composition.
+    await page.waitForTimeout(1600);
     await page.screenshot({ path: `${OUT}/desktop-01-entry.png` });
 
     await enterMuted(page);
@@ -46,7 +49,16 @@ test.describe('visual reference', () => {
     await page.waitForTimeout(400);
     await page.screenshot({ path: `${OUT}/desktop-05-hover-red.png` });
 
-    await page.locator('#hotspot-blue').focus();
+    // Focused by keyboard, not by .focus(): the ring is drawn by
+    // :focus-visible, which only matches when the last input was a key. The
+    // pointer is parked off both objects first, or the shot shows a hover.
+    await page.mouse.move(720, 870);
+    await page.evaluate(() => {
+      document.body.focus();
+      (document.activeElement as HTMLElement | null)?.blur();
+    });
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
     await page.waitForTimeout(300);
     await page.screenshot({ path: `${OUT}/desktop-06-focus-blue.png` });
 

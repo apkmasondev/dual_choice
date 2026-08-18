@@ -276,7 +276,9 @@ copy is the product, not the film box (`PRODUCT_SAFE_RECT`).
 - The entry overlay is a native `<dialog>` opened with `showModal()`, so focus
   is contained and the page behind it is inert without a hand-rolled trap.
 - `:focus-visible` is stronger than hover and legible without colour.
-- Touch targets are at least 44 px even when the visible ring is smaller.
+- Touch targets are at least 44 px even when the visible mark is smaller — and
+  the mark is light, not an outline: the objects carry a bloom that widens
+  under the pointer, while `:focus-visible` is the one state that draws an edge.
 - `env(safe-area-inset-*)` on every edge-anchored control.
 - A polite live region announces the choice and the selected branch — not the
   playhead.
@@ -316,7 +318,11 @@ Budgets from the plan, and what the build actually does:
   on resize and all style writes happen in the animation frame.
 - Only `transform` and `opacity` are animated. `will-change` is not set
   globally.
-- Fonts: a system stack. No web font request, no swap, no layout shift.
+- Fonts: one self-hosted variable face (Archivo, latin subset, 34 KB woff2,
+  weights 100–900 from a single file). It is preloaded next to the poster and
+  served from the same origin — no third-party request, no CDN in the critical
+  path. `font-display: swap` covers the gap, and the gate it first typesets
+  fades in over 900 ms, so the swap lands inside the fade.
 - The stylesheet is a render-blocking `<link>`, not a JS import, so the first
   paint is already styled — an undecoded `<video>` paints black, and that was
   visible as a flash while the CSS was arriving through the module graph.

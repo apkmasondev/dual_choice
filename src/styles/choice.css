@@ -53,39 +53,76 @@
     --accent-deep: var(--accent-red-deep);
   }
 
-  /* The visible mark. Deliberately not an outline around the object: a hairline
-     circle plus a whisper of light, so it reads as part of the shot. */
+  /*
+    The mark is light, not an outline.
+
+    A drawn circle read as a sticker laid over the frame: both objects are lit
+    props with their own edges, and a hairline traced around them competes
+    with that instead of belonging to it. What is left is a bloom the shot
+    could plausibly have contained — the core sits on the object, the halo
+    spills past it. Faint while the choice waits, wide and warm under the
+    pointer. Colour is still never the only carrier: the labels, the leaders
+    and the shape words do that work.
+  */
   .hotspot__ring {
     position: absolute;
-    inline-size: var(--ring, 56px);
-    block-size: var(--ring, 56px);
+    inline-size: calc(var(--ring, 56px) * 1.06);
+    block-size: calc(var(--ring, 56px) * 1.06);
     border-radius: 50%;
-    border: 1px solid rgb(16 20 26 / 22%);
-    box-shadow:
-      0 0 0 1px rgb(255 255 255 / 22%) inset,
-      0 6px 20px rgb(16 20 26 / 8%);
+    /* Transparent until focus, which is the one state that needs an edge. */
+    border: 1px solid transparent;
+    background: radial-gradient(
+      circle,
+      rgb(255 255 255 / 20%) 0%,
+      color-mix(in srgb, var(--accent) 20%, transparent) 44%,
+      transparent 72%
+    );
+    opacity: 0.62;
     transition:
-      transform var(--dur-fast) var(--ease-premium),
+      transform var(--dur-mid) var(--ease-premium),
+      opacity var(--dur-mid) var(--ease-premium),
       border-color var(--dur-fast) var(--ease-premium),
       box-shadow var(--dur-fast) var(--ease-premium);
   }
 
   .hotspot__glow {
     position: absolute;
-    inline-size: calc(var(--ring, 56px) * 1.9);
-    block-size: calc(var(--ring, 56px) * 1.9);
+    inline-size: calc(var(--ring, 56px) * 2.3);
+    block-size: calc(var(--ring, 56px) * 2.3);
     border-radius: 50%;
     background: radial-gradient(
       circle,
-      color-mix(in srgb, var(--accent) 24%, transparent) 0%,
-      color-mix(in srgb, var(--accent) 8%, transparent) 42%,
-      transparent 68%
+      color-mix(in srgb, var(--accent) 20%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 9%, transparent) 38%,
+      transparent 70%
     );
-    opacity: 0;
-    transform: scale(0.86);
+    /* Never fully out: on a touch screen there is no hover to discover it
+       with, so the object has to look live on its own. */
+    opacity: 0.34;
+    transform: scale(0.82);
+    /* The pulse rides the `scale` property rather than `transform` or
+       `opacity`. An animated property always beats a declarative one, so a
+       breath written in opacity would snap the bloom back to its dimmest
+       frame the moment the pointer left, instead of fading with it. */
+    animation: hotspot-breathe 5.2s var(--ease-in-out) infinite;
     transition:
-      opacity var(--dur-fast) var(--ease-premium),
-      transform var(--dur-fast) var(--ease-premium);
+      opacity var(--dur-mid) var(--ease-premium),
+      transform var(--dur-mid) var(--ease-premium);
+  }
+
+  .hotspot[data-branch='red'] .hotspot__glow {
+    /* Out of phase with the crystal, so the two never pulse as one unit. */
+    animation-delay: -2.6s;
+  }
+
+  @keyframes hotspot-breathe {
+    0%,
+    100% {
+      scale: 1;
+    }
+    50% {
+      scale: 1.07;
+    }
   }
 
   .hotspot__label {
@@ -129,13 +166,13 @@
   /* --- Desktop hover --------------------------------------------------- */
   @media (hover: hover) and (pointer: fine) {
     .hotspot:hover .hotspot__ring {
-      transform: scale(1.08);
-      border-color: color-mix(in srgb, var(--accent-deep) 46%, transparent);
+      transform: scale(1.1);
+      opacity: 1;
     }
 
     .hotspot:hover .hotspot__glow {
-      opacity: 1;
-      transform: scale(1);
+      opacity: 0.92;
+      transform: scale(1.12);
     }
 
     .hotspot:hover .hotspot__label {
@@ -171,8 +208,8 @@
   }
 
   .hotspot:focus-visible .hotspot__glow {
-    opacity: 1;
-    transform: scale(1);
+    opacity: 0.92;
+    transform: scale(1.12);
   }
 
   .hotspot:focus-visible .hotspot__descriptor {
@@ -181,13 +218,13 @@
 
   /* --- Selected + loading ---------------------------------------------- */
   .hotspot[data-selected='true'] .hotspot__ring {
+    opacity: 1;
     animation: hotspot-commit 460ms var(--ease-out) forwards;
-    border-color: color-mix(in srgb, var(--accent-deep) 70%, transparent);
   }
 
   .hotspot[data-selected='true'] .hotspot__glow {
     opacity: 1;
-    transform: scale(1.12);
+    transform: scale(1.24);
   }
 
   /* The unchosen object steps back immediately, so the commitment is legible
@@ -207,14 +244,23 @@
     transition: opacity var(--dur-fast) var(--ease-out);
   }
 
-  .hotspot[data-loading='true'] .hotspot__ring::after {
-    content: '';
-    position: absolute;
-    inset: -5px;
-    border-radius: 50%;
-    border: 1px solid transparent;
-    border-block-start-color: var(--ink-strong);
-    animation: hotspot-spin 900ms linear infinite;
+  /* Waiting for the film reads as light gathering. A rotating arc would be
+     the drawn circle again — reintroduced at the loudest moment of the piece,
+     which is the one place it would be hardest to forgive. */
+  .hotspot[data-loading='true'] .hotspot__glow {
+    animation: hotspot-load 1100ms var(--ease-in-out) infinite;
+  }
+
+  @keyframes hotspot-load {
+    0%,
+    100% {
+      opacity: 0.6;
+      transform: scale(1.08);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.34);
+    }
   }
 
   @keyframes hotspot-commit {
@@ -226,12 +272,6 @@
     }
     100% {
       transform: scale(1.02);
-    }
-  }
-
-  @keyframes hotspot-spin {
-    to {
-      transform: rotate(1turn);
     }
   }
 }

@@ -229,15 +229,10 @@
     inset-block-end: 0;
     inset-inline: 0;
     block-size: 1px;
-    background: linear-gradient(
-      to right,
-      var(--hairline-strong) 0%,
-      var(--hairline) 46%,
-      rgb(16 20 26 / 8%) 100%
-    );
+    background: var(--rule-line);
     transform-origin: left;
     /* The rule draws itself across the frame before the copy arrives. */
-    animation: reveal-rule-draw var(--dur-veil) var(--ease-out) 120ms backwards;
+    animation: rule-draw var(--dur-veil) var(--ease-out) 120ms backwards;
   }
 
   /* Short accent cap: the chosen branch signs the rule. Never the only
@@ -247,17 +242,11 @@
     position: absolute;
     inset-block-end: 0;
     inset-inline-start: 0;
-    inline-size: 68px;
+    inline-size: var(--rule-cap);
     block-size: 2px;
     background: var(--branch-accent, var(--ink-ghost));
     transform-origin: left;
-    animation: reveal-rule-draw var(--dur-slow) var(--ease-out) 320ms backwards;
-  }
-
-  @keyframes reveal-rule-draw {
-    from {
-      transform: scaleX(0);
-    }
+    animation: rule-draw var(--dur-slow) var(--ease-out) 320ms backwards;
   }
 
   /*
@@ -275,7 +264,7 @@
   }
 
   .reveal:has(.cta :focus-visible) .reveal__meta::after {
-    inline-size: 116px;
+    inline-size: calc(var(--rule-cap) * 1.7);
   }
 
   .reveal:has(.cta :focus-visible) .reveal__stamp {
@@ -285,7 +274,7 @@
   /* Pointer devices only: on touch the lit state would simply stick. */
   @media (hover: hover) and (pointer: fine) {
     .reveal:has(.cta:hover) .reveal__meta::after {
-      inline-size: 116px;
+      inline-size: calc(var(--rule-cap) * 1.7);
     }
 
     .reveal:has(.cta:hover) .reveal__stamp {

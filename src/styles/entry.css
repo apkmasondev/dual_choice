@@ -52,12 +52,19 @@
     background: transparent;
   }
 
+  /*
+    The gate is composed like the card that closes the piece: a label, a rule
+    drawn under it, and everything else hanging from that rule. Centred on the
+    screen, because a modal that opens off-centre reads as a mistake — but
+    ranged left inside itself, because a centred stack of two pills is the
+    shape of a cookie banner, and this is the first thing anyone sees.
+  */
   .entry__panel {
     display: grid;
-    justify-items: center;
+    justify-items: start;
     gap: var(--space-2xs);
-    text-align: center;
-    max-inline-size: 34rem;
+    text-align: start;
+    inline-size: min(34rem, 100%);
     /* Same rule: the resting transform is the *open* one, so losing `[open]`
        on close cannot re-introduce an offset mid-fade. */
     transform: none;
@@ -70,12 +77,47 @@
     }
   }
 
+  /* The panel is where focus lands when the dialog opens, not a control. An
+     outline drawn around the whole gate is worse than the ring it replaced,
+     and every real control inside still shows its own. */
+  .entry__panel:focus {
+    outline: none;
+  }
+
   .entry__eyebrow {
+    position: relative;
+    inline-size: 100%;
+    padding-block-end: var(--space-2xs);
     font-size: var(--step-micro);
     font-weight: 500;
     letter-spacing: var(--tracking-wide);
     text-transform: uppercase;
     color: var(--ink-muted);
+  }
+
+  .entry__eyebrow::before {
+    content: '';
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    block-size: 1px;
+    background: var(--rule-line);
+    transform-origin: left;
+    animation: rule-draw var(--dur-veil) var(--ease-out) 260ms backwards;
+  }
+
+  /* Both futures, still unchosen: the cap the reveal rule carries in one
+     colour is split here, because nothing has been decided yet. */
+  .entry__eyebrow::after {
+    content: '';
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: 0;
+    inline-size: var(--rule-cap);
+    block-size: 2px;
+    background: linear-gradient(to right, var(--accent-blue) 0 50%, var(--accent-red) 50% 100%);
+    transform-origin: left;
+    animation: rule-draw var(--dur-slow) var(--ease-out) 520ms backwards;
   }
 
   .entry__title {
@@ -94,7 +136,6 @@
   .entry__actions {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
     gap: var(--space-2xs);
     margin-block-start: var(--space-m);
   }

@@ -14,8 +14,19 @@
     display: none;
   }
 
+  /* Nothing is being scrubbed, so there is no position to report. */
+  :root[data-motion='reduced'] .film-progress {
+    display: none;
+  }
+
   :root[data-motion='reduced'] .scroll-hint__rule {
     animation: none;
+  }
+
+  /* The objects keep their bloom; what goes is the pulse in it. */
+  :root[data-motion='reduced'] .hotspot__glow {
+    animation: none;
+    opacity: 0.4;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -42,6 +53,11 @@
     .cta {
       transition-duration: 260ms !important;
       transition-property: opacity !important;
+    }
+
+    .hotspot__glow {
+      animation: none !important;
+      opacity: 0.4;
     }
 
     .hotspot,

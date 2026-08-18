@@ -1,6 +1,8 @@
 @layer components {
-  /* Sound toggle, SKIP, PLAY PRODUCT FILM and the CTA buttons are one family:
-     same hairline, same radius, same motion. */
+  /* SKIP, PLAY PRODUCT FILM and the CTA buttons are one family: same hairline,
+     same radius, same motion. The sound toggle starts from the same base and
+     then takes the chrome off — it is the only control that lives permanently
+     over the film, so it is the only one that cannot afford to be furniture. */
   .chrome {
     position: absolute;
     inset-block-start: var(--safe-top);
@@ -12,20 +14,18 @@
     gap: var(--space-s);
   }
 
+  /* The wordmark alone. A rounded black tile with an "A" in it is an app
+     icon, and an app icon laid on a studio photograph reads as a sticker —
+     the same thing the ring around the objects was doing. It also said the
+     name three times in one corner: mark, wordmark, eyebrow. In the browser
+     tab, where a tile is the right answer, the mark is still the favicon. */
   .brand {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
     color: var(--ink);
     font-size: var(--step-small);
     font-weight: 600;
     letter-spacing: var(--tracking-wide);
-  }
-
-  .brand__mark {
-    inline-size: 26px;
-    block-size: 26px;
-    flex: none;
   }
 
   .control {
@@ -63,7 +63,10 @@
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .control:hover {
+    /* The sound toggle has no pill to light up — its hover lives in the ink
+       and the meter — so the chip treatment is scoped away from it rather
+       than applied and then undone. */
+    .control:hover:not(.sound-toggle) {
       background: rgb(255 255 255 / 34%);
       border-color: var(--hairline-strong);
       box-shadow:
@@ -81,10 +84,72 @@
      running" without a crossed-out icon, and it is the one small piece of
      motion the chrome allows itself. State is still carried by aria-pressed
      and by the label, never by the animation alone.
+
+     And it is the one control that is not a chip. A glass pill in the corner
+     of a studio photograph is interface furniture — it could sit on any site.
+     Stripped back to its mark, its word and a level rule, it answers the
+     wordmark across the stage and speaks the same language as the rule under
+     the film: short and faint while muted, full and steady while sound runs.
      ---------------------------------------------------------------------- */
+  .sound-toggle {
+    /* The meter is as wide as the mark it sits under, and starts where the
+       mark starts; both are named here so the two cannot drift apart. */
+    --meter-size: 18px;
+    --meter-inset: 0.35rem;
+
+    position: relative;
+    padding-inline: var(--meter-inset);
+    /* The border stays, transparent: it is what holds the control's height
+       and width identical to the chips it sits beside. */
+    border-color: transparent;
+    background: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    color: var(--ink-muted);
+    gap: 0.6rem;
+  }
+
+  /* A meter track under the bars, not an underline beneath the word: a rule
+     running the full width would read as a link in the corner of the page. */
+  .sound-toggle::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: var(--meter-inset);
+    inset-block-end: 0.42rem;
+    inline-size: var(--meter-size);
+    block-size: 1px;
+    background: currentColor;
+    opacity: 0.3;
+    transform: scaleX(0.28);
+    transform-origin: left;
+    transition:
+      transform var(--dur-mid) var(--ease-premium),
+      opacity var(--dur-mid) var(--ease-premium);
+  }
+
+  .sound-toggle[aria-pressed='true'] {
+    color: var(--ink);
+  }
+
+  .sound-toggle[aria-pressed='true']::after {
+    transform: scaleX(1);
+    opacity: 0.5;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sound-toggle:hover {
+      color: var(--ink);
+    }
+
+    .sound-toggle:hover::after {
+      transform: scaleX(1);
+      opacity: 0.55;
+    }
+  }
+
   .eq {
-    inline-size: 18px;
-    block-size: 18px;
+    inline-size: var(--meter-size, 18px);
+    block-size: var(--meter-size, 18px);
     flex: none;
     overflow: visible;
   }
@@ -93,8 +158,8 @@
     fill: currentColor;
     transform-box: fill-box;
     transform-origin: 50% 50%;
-    transform: scaleY(0.22);
-    opacity: 0.55;
+    transform: scaleY(0.2);
+    opacity: 0.6;
     transition:
       transform var(--dur-mid) var(--ease-premium),
       opacity var(--dur-mid) var(--ease-premium);
@@ -161,7 +226,47 @@
     .sound-toggle {
       padding: 0.55rem;
       aspect-ratio: 1;
+      /* Nothing but the mark is left, and there is no hover on a phone to
+         find it with, so it carries full ink rather than muted. */
+      color: var(--ink);
     }
+
+    .sound-toggle::after {
+      inset-inline-start: calc(50% - var(--meter-size) / 2);
+      /* Hugs the mark: with the word gone there is nothing else to hang off. */
+      inset-block-end: 0.72rem;
+    }
+  }
+
+  /* --- Film timeline -----------------------------------------------------
+     Scrolling drives a film, and until now nothing said how far through it
+     the visitor was. One hairline, in the same language as the rule under the
+     reveal and the meter under SOUND, so the scrub reads as mechanical rather
+     than approximate.
+     ---------------------------------------------------------------------- */
+  .film-progress {
+    position: absolute;
+    inset-block-end: var(--safe-bottom);
+    inset-inline: var(--safe-inline);
+    z-index: var(--z-controls);
+    block-size: 1px;
+    background: rgb(16 20 26 / 10%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-mid) var(--ease-out);
+  }
+
+  :root[data-state='intro'] .film-progress {
+    opacity: 1;
+  }
+
+  .film-progress__fill {
+    display: block;
+    block-size: 100%;
+    background: var(--ink);
+    opacity: 0.42;
+    transform: scaleX(var(--intro-progress, 0));
+    transform-origin: left;
   }
 
   /* --- Skip / play film ------------------------------------------------- */

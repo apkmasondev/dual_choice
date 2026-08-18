@@ -40,6 +40,16 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
 
+    <!-- The entry dialog's title is typeset the moment it fades in, so the face
+         has to be in flight with the poster rather than after it. -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/archivo-variable-latin.woff2"
+      crossorigin
+    />
+
     <!-- The poster is the LCP element: it must beat the video decoder to the screen. -->
     <link
       rel="preload"
@@ -173,27 +183,7 @@
       </div>
 
       <div class="chrome">
-        <p class="brand">
-          <svg class="brand__mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-            <rect width="64" height="64" rx="14" fill="currentColor" />
-            <path
-              d="M19 45 32 14 45 45"
-              fill="none"
-              stroke="#fff"
-              stroke-width="6.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M23.5 37H40.5"
-              fill="none"
-              stroke="#fff"
-              stroke-width="5.5"
-              stroke-linecap="round"
-            />
-          </svg>
-          <span class="brand__word">APK</span>
-        </p>
+        <p class="brand">APK</p>
 
         <button class="control sound-toggle" type="button" id="sound-toggle" aria-pressed="false">
           <svg class="eq" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
@@ -206,8 +196,17 @@
         </button>
       </div>
 
+      <!--
+        The film's timeline. Driven straight from --intro-progress and never
+        transitioned: it reports on the frame currently on screen, so it has
+        to move in the same paint as that frame, not glide towards it.
+      -->
+      <div class="film-progress" aria-hidden="true">
+        <span class="film-progress__fill"></span>
+      </div>
+
       <div class="copy" id="story">
-        <p class="eyebrow" id="eyebrow">APK / INTERACTIVE PRODUCT EXPERIENCE</p>
+        <p class="eyebrow" id="eyebrow">INTERACTIVE PRODUCT EXPERIENCE</p>
 
         <p class="scroll-hint" id="scroll-hint">
           <span class="scroll-hint__text">SCROLL TO ENTER</span>
@@ -309,8 +308,14 @@
         from a hand-rolled focus trap.
       -->
       <dialog class="entry" id="entry" aria-labelledby="entry-title">
-        <div class="entry__panel">
-          <p class="entry__eyebrow">APK / INTERACTIVE PRODUCT EXPERIENCE</p>
+        <!--
+          Focus lands on the panel, not on the first button: showModal() would
+          otherwise open with a focus ring drawn around ENTER WITH SOUND for
+          every visitor, including the ones who arrived with a mouse. Tab still
+          reaches both buttons, and the dialog still traps focus.
+        -->
+        <div class="entry__panel" tabindex="-1" autofocus>
+          <p class="entry__eyebrow">INTERACTIVE PRODUCT EXPERIENCE</p>
           <h2 class="entry__title" id="entry-title">ENTER EXPERIENCE</h2>
           <p class="entry__support">Best with sound. Runs entirely in your browser.</p>
           <div class="entry__actions">

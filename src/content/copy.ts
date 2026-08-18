@@ -13,7 +13,8 @@ export const COPY = {
 
   brand: {
     wordmark: 'APK',
-    eyebrow: 'APK / INTERACTIVE PRODUCT EXPERIENCE',
+    /** No "APK /" prefix: it hangs directly under the wordmark. */
+    eyebrow: 'INTERACTIVE PRODUCT EXPERIENCE',
   },
 
   entry: {
