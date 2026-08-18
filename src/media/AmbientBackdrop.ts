@@ -25,6 +25,9 @@ export class AmbientBackdrop {
   /** How many source pixels are sampled to build an extension band. */
   static readonly EDGE_SAMPLE = 8;
 
+  /** Softening applied while the bands are drawn, in canvas pixels. */
+  static readonly SOFTEN = 'blur(1.8px)';
+
   readonly #canvas: HTMLCanvasElement;
   readonly #stage: HTMLElement;
   readonly #context: CanvasRenderingContext2D | null;
@@ -56,7 +59,7 @@ export class AmbientBackdrop {
     */
     this.#context = canvas.getContext('2d', { alpha: false });
     if (this.#context) {
-      this.#context.filter = 'blur(1.8px)';
+      this.#context.filter = AmbientBackdrop.SOFTEN;
       this.#context.imageSmoothingEnabled = true;
       this.#context.imageSmoothingQuality = 'high';
     }
@@ -198,6 +201,7 @@ export class AmbientBackdrop {
     if (left > 0.5) {
       context.drawImage(element, 0, 0, edge, sourceHeight, -bleed, top, left + bleed * 2, height);
       this.#mirror(context, element, sourceWidth, sourceHeight, left, top, width, height, 'left');
+      this.#join(context, element, sourceHeight, left, top, height, 'left');
     }
     if (left + width < canvasWidth - 0.5) {
       context.drawImage(
@@ -212,9 +216,45 @@ export class AmbientBackdrop {
         height,
       );
       this.#mirror(context, element, sourceWidth, sourceHeight, left, top, width, height, 'right');
+      this.#join(context, element, sourceHeight, left + width, top, height, 'right', sourceWidth);
     }
 
     context.drawImage(element, 0, 0, sourceWidth, sourceHeight, left, top, width, height);
+  }
+
+  /**
+   * Lays the frame's own edge column along the join, unaveraged and unsoftened.
+   *
+   * The band is eight source columns stretched wide, then blurred. Both steps
+   * are what make it read as light rather than as a smear — and both mean the
+   * colour it puts against the frame is an average of a strip, not the colour
+   * of the strip's first column. Where the studio falls off towards the edge
+   * of the shot those differ, by about 1.5 levels of luminance on a 2000 px
+   * stage, and 1.5 levels along a straight vertical line is exactly the kind
+   * of edge the eye finds for free.
+   *
+   * Two canvas pixels of the true edge, drawn last and drawn sharp, put the
+   * right colour at the seam; the browser's own upscale ramps it back into the
+   * softened band over some forty screen pixels, so nothing turns crisp.
+   */
+  #join(
+    context: CanvasRenderingContext2D,
+    element: HTMLVideoElement | HTMLImageElement,
+    sourceHeight: number,
+    axis: number,
+    top: number,
+    height: number,
+    side: 'left' | 'right',
+    sourceWidth = 0,
+  ): void {
+    const bleed = 1;
+    const strip = 2;
+    const sourceX = side === 'left' ? 0 : sourceWidth - 1;
+    const destX = side === 'left' ? axis - strip : axis - bleed;
+
+    context.filter = 'none';
+    context.drawImage(element, sourceX, 0, 1, sourceHeight, destX, top, strip + bleed, height);
+    context.filter = AmbientBackdrop.SOFTEN;
   }
 
   /**
