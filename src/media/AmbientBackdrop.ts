@@ -32,6 +32,7 @@ export class AmbientBackdrop {
   #still: HTMLImageElement | null = null;
   #lastPaint = 0;
   #enabled = false;
+  #following = false;
   #minIntervalMs: number;
 
   constructor(
@@ -64,6 +65,20 @@ export class AmbientBackdrop {
     this.#minIntervalMs = ms;
   }
 
+  /**
+   * Paints every frame while the film is moving.
+   *
+   * The throttle is there because a film that only changes its *content* does
+   * not need a wash repainted sixty times a second. A film that changes its
+   * *position* does: at the reveal it settles over 760 ms, and the bands,
+   * repainted on their own slower cadence, trailed behind it. Measured across
+   * that settle, the wash's idea of where the frame was ran an average of
+   * 21 px behind where it actually was; following brings that to 6 px.
+   */
+  setFollowing(following: boolean): void {
+    this.#following = following;
+  }
+
   /** Called from the single rAF loop. Returns true when it actually painted. */
   update(now: number): boolean {
     const context = this.#context;
@@ -71,7 +86,7 @@ export class AmbientBackdrop {
 
     const element = this.#source ?? this.#still;
     if (!element) return false;
-    if (now - this.#lastPaint < this.#minIntervalMs) return false;
+    if (!this.#following && now - this.#lastPaint < this.#minIntervalMs) return false;
 
     if (this.#source) {
       // HAVE_CURRENT_DATA: there is a frame to copy.

@@ -114,10 +114,16 @@
 
     The extension is exact at the join — that is what hides the seam — but it
     keeps carrying whatever is at the frame's edge. On the RED final frame that
-    edge holds the earbuds' reflection in the floor, which smeared a red haze
-    across the sales copy. The stops are driven by the live media rect, so the
-    wash starts only where the frame ends and collapses to nothing when the
-    film is full-bleed.
+    edge holds the earbuds' reflection, and an eight-pixel column of it
+    stretched across a side band became a red cloud at each side of the
+    screen: static and wrong at the reveal, and worse while the film ran,
+    because the reflection moves with the product and the band is repainted
+    ten times a second, so the cloud pulsed.
+
+    Both axes are washed for the same reason, and by the same rule: the stops
+    are driven by the live media rect, so the wash begins only where the frame
+    ends and collapses to nothing the moment the film is full-bleed and there
+    is no band to settle.
   */
   .ambient__veil {
     position: absolute;
@@ -131,6 +137,13 @@
         rgb(184 189 195 / 0%) calc(var(--frame-y, 0px) * 0.92),
         rgb(176 182 188 / 0%) calc(var(--frame-y, 0px) + var(--frame-h, 100%) + 24px),
         rgb(176 182 188 / 84%) 100%
+      ),
+      linear-gradient(
+        to right,
+        rgb(184 189 195 / 88%) 0,
+        rgb(184 189 195 / 0%) calc(var(--frame-x, 0px) * 0.86),
+        rgb(176 182 188 / 0%) calc(var(--frame-x, 0px) + var(--frame-w, 100%) + 24px),
+        rgb(176 182 188 / 88%) 100%
       ),
       radial-gradient(140% 110% at 50% 50%, rgb(16 20 26 / 0%) 55%, rgb(16 20 26 / 8%) 100%);
   }

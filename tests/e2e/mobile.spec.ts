@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { chooseBranch, expectHotspotOnObject, reachChoice, skipToReveal } from './helpers.ts';
+import {
+  chooseBranch,
+  expectHotspotOnObject,
+  reachChoice,
+  resizeStage,
+  skipToReveal,
+} from './helpers.ts';
 
 test.describe('mobile', () => {
   test.skip(({ browserName }) => browserName !== 'chromium', 'projection probe needs Chromium');
@@ -46,17 +52,7 @@ test.describe('mobile', () => {
       { width: 360, height: 800 },
       { width: 390, height: 844 },
     ]) {
-      await page.setViewportSize(viewport);
-      await page.evaluate(
-        () =>
-          new Promise<void>((resolve) =>
-            requestAnimationFrame(() =>
-              requestAnimationFrame(() => {
-                resolve();
-              }),
-            ),
-          ),
-      );
+      await resizeStage(page, viewport);
       await expect(page.locator('html')).toHaveAttribute('data-state', 'choice');
       await expectHotspotOnObject(page, 'blue');
       await expectHotspotOnObject(page, 'red');

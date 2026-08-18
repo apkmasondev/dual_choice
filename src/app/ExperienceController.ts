@@ -26,6 +26,14 @@ import type { BranchId } from '../choice/hotspot-config.ts';
 
 /** SKIP appears once the film has genuinely started, not on a hopeful timer. */
 const SKIP_REVEAL_AFTER_MS = 1200;
+
+/**
+ * How long the ambient wash tracks the film frame by frame after the film has
+ * been told to move. A ceiling over the 760 ms settle in the stylesheet, not a
+ * copy of it.
+ */
+const FILM_SETTLE_WINDOW_MS = 900;
+
 /** Safety net in case a browser skips `transitionend` on a hidden element. */
 const CROSSFADE_GUARD_MS = 700;
 
@@ -56,6 +64,7 @@ export class ExperienceController {
   #rafHandle = 0;
   #branchesUpgraded = false;
   #cancelSkipReveal: (() => void) | null = null;
+  #cancelFollow: (() => void) | null = null;
 
   constructor() {
     const reduced = prefersReducedMotion();
@@ -411,6 +420,21 @@ export class ExperienceController {
     this.#refreshRevealFit();
   }
 
+  /**
+   * Keeps the ambient wash glued to the film while the film is moving.
+   *
+   * Only a ceiling: the settle itself is 760 ms in the stylesheet, and this
+   * window merely has to outlast it. Nothing depends on the two numbers
+   * matching, so they are not tied together.
+   */
+  #followFilm(): void {
+    this.#ambient.setFollowing(true);
+    this.#cancelFollow?.();
+    this.#cancelFollow = this.#disposables.timeout(() => {
+      this.#ambient.setFollowing(false);
+    }, FILM_SETTLE_WINDOW_MS);
+  }
+
   /** Measures the panel, then settles the film clear of it. */
   #refreshRevealFit(): void {
     // Measuring needs the panel in flow, so this waits one frame. The card
@@ -421,6 +445,7 @@ export class ExperienceController {
     requestAnimationFrame(() => {
       if (!isBranchReveal(this.#machine.state)) return;
       this.#layout.applyRevealTransform(this.#reveal.measure());
+      this.#followFilm();
 
       requestAnimationFrame(() => {
         if (!isBranchReveal(this.#machine.state)) return;
@@ -469,6 +494,7 @@ export class ExperienceController {
     this.#showFilm(video, { keepPrevious: true });
     if (!this.#machine.beginPlayback()) return;
     this.#layout.clearRevealTransform();
+    this.#followFilm();
     await video.play();
     this.#intro.setActive(false);
 
@@ -485,6 +511,7 @@ export class ExperienceController {
 
     this.#reveal.hide();
     this.#layout.clearRevealTransform();
+    this.#followFilm();
     this.#playFilmButton.hidden = true;
     delete document.documentElement.dataset['branch'];
 

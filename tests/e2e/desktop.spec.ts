@@ -6,6 +6,7 @@ import {
   expectHotspotOnObject,
   gotoExperience,
   reachChoice,
+  resizeStage,
   scrollToChoice,
   skipToReveal,
 } from './helpers.ts';
@@ -112,18 +113,7 @@ test.describe('desktop journey', () => {
     ];
 
     for (const viewport of viewports) {
-      await page.setViewportSize(viewport);
-      // One frame for the ResizeObserver -> rAF -> transform write.
-      await page.evaluate(
-        () =>
-          new Promise<void>((resolve) =>
-            requestAnimationFrame(() =>
-              requestAnimationFrame(() => {
-                resolve();
-              }),
-            ),
-          ),
-      );
+      await resizeStage(page, viewport);
       await expectHotspotOnObject(page, 'blue');
       await expectHotspotOnObject(page, 'red');
     }
@@ -137,15 +127,7 @@ test.describe('desktop journey', () => {
       { width: 1440, height: 900 },
       { width: 900, height: 1400 },
     ]) {
-      await page.setViewportSize(viewport);
-      await page.evaluate(
-        () =>
-          new Promise<void>((resolve) =>
-            requestAnimationFrame(() => {
-              resolve();
-            }),
-          ),
-      );
+      await resizeStage(page, viewport);
       const box = await page.evaluate(() => {
         const video = document.querySelector<HTMLVideoElement>('#film-intro');
         const rect = video?.getBoundingClientRect();

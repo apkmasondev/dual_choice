@@ -63,10 +63,10 @@
   }
 
   @media (hover: hover) and (pointer: fine) {
-    /* The sound toggle has no pill to light up — its hover lives in the ink
-       and the meter — so the chip treatment is scoped away from it rather
-       than applied and then undone. */
-    .control:hover:not(.sound-toggle) {
+    /* A bare control has no pill to light up — its hover lives in the ink and
+       its rule — so the chip treatment is scoped away rather than applied and
+       then undone. */
+    .control:hover:not(.control--bare) {
       background: rgb(255 255 255 / 34%);
       border-color: var(--hairline-strong);
       box-shadow:
@@ -91,16 +91,17 @@
      wordmark across the stage and speaks the same language as the rule under
      the film: short and faint while muted, full and steady while sound runs.
      ---------------------------------------------------------------------- */
-  .sound-toggle {
-    /* The meter is as wide as the mark it sits under, and starts where the
-       mark starts; both are named here so the two cannot drift apart. */
+  /* A control with the chip taken off: mark, word, and a rule under them.
+     Everything that lives permanently over the film wears this, because a
+     pane of glass floating on a studio photograph is interface furniture —
+     it could sit on any site. The border stays, transparent: it is what keeps
+     the box identical to the chips this sits beside. */
+  .control--bare {
     --meter-size: 18px;
     --meter-inset: 0.35rem;
 
     position: relative;
     padding-inline: var(--meter-inset);
-    /* The border stays, transparent: it is what holds the control's height
-       and width identical to the chips it sits beside. */
     border-color: transparent;
     background: none;
     box-shadow: none;
@@ -109,16 +110,25 @@
     gap: 0.6rem;
   }
 
+  /* SKIP and PLAY FILM state nothing, so their rule is simply drawn under
+     them and lifts with the pointer. The sound toggle's rule is a meter and
+     says more; it overrides the geometry below. */
+  .control--bare::after {
+    content: '';
+    position: absolute;
+    inset-inline: var(--meter-inset);
+    inset-block-end: 0.42rem;
+    block-size: 1px;
+    background: currentColor;
+    opacity: 0.24;
+    transition: opacity var(--dur-mid) var(--ease-premium);
+  }
+
   /* A meter track under the bars, not an underline beneath the word: a rule
      running the full width would read as a link in the corner of the page. */
   .sound-toggle::after {
-    content: '';
-    position: absolute;
-    inset-inline-start: var(--meter-inset);
-    inset-block-end: 0.42rem;
+    inset-inline: var(--meter-inset) auto;
     inline-size: var(--meter-size);
-    block-size: 1px;
-    background: currentColor;
     opacity: 0.3;
     transform: scaleX(0.28);
     transform-origin: left;
@@ -137,8 +147,12 @@
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .sound-toggle:hover {
+    .control--bare:hover {
       color: var(--ink);
+    }
+
+    .control--bare:hover::after {
+      opacity: 0.5;
     }
 
     .sound-toggle:hover::after {
@@ -224,7 +238,7 @@
     }
 
     .sound-toggle {
-      padding: 0.55rem;
+      padding-inline: 0.55rem;
       aspect-ratio: 1;
       /* Nothing but the mark is left, and there is no hover on a phone to
          find it with, so it carries full ink rather than muted. */
