@@ -61,6 +61,11 @@ export const COPY = {
   } satisfies Record<BranchId, BranchCopy>,
 
   final: {
+    /* Right-hand end of the reveal rule: the studio's edition mark for this
+       piece. Bump the number for the next realisation; the year is written
+       out rather than computed, so it never changes on its own at midnight
+       on New Year's Eve. */
+    stamp: 'NO. 026 · 2026',
     headline: 'YOUR PRODUCT COULD BE NEXT.',
     body: 'APK creates interactive product experiences where film, sound and code become one seamless story.',
     supporting:

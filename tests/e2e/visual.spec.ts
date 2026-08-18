@@ -63,6 +63,11 @@ test.describe('visual reference', () => {
     await skipToReveal(page, 'red');
     await page.waitForTimeout(1600);
     await page.screenshot({ path: `${OUT}/desktop-08-red-reveal.png` });
+
+    // The card lights its signature while the call to action is attended to.
+    await page.getByRole('link', { name: 'START A PROJECT' }).hover();
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: `${OUT}/desktop-09-cta-hover.png` });
   });
 
   test('ultrawide choice', async ({ page }) => {

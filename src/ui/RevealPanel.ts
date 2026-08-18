@@ -7,6 +7,7 @@ import type { Disposables } from '../utils/disposables.ts';
 export interface RevealElements {
   readonly section: HTMLElement;
   readonly kicker: HTMLElement;
+  readonly stamp: HTMLElement;
   readonly headline: HTMLElement;
   readonly body: HTMLElement;
   readonly contact: HTMLAnchorElement;
@@ -41,6 +42,8 @@ export class RevealPanel {
       elements.portfolio.rel = EXTERNAL_LINK_REL;
       elements.portfolio.hidden = false;
     }
+
+    elements.stamp.textContent = COPY.final.stamp;
 
     if (!HAS_EXTERNAL_CTA && isDev) {
       elements.hint.textContent = COPY.final.unconfiguredHint;

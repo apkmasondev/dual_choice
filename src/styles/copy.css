@@ -141,21 +141,40 @@
     inset-inline: var(--safe-inline);
     inset-block-end: calc(var(--safe-bottom) + var(--space-2xs));
     display: grid;
-    gap: var(--space-m) var(--space-2xl);
-    align-items: end;
+    gap: var(--space-m) var(--space-xl);
+    /* Both columns hang from the rule, so it reads as a shared datum line
+       instead of two blocks that happen to end level with each other. */
+    align-items: start;
     max-inline-size: 84rem;
     margin-inline: auto;
+    grid-template-areas:
+      'meta'
+      'product'
+      'cta';
+  }
+
+  /* When the film has drawn back into a card, the rule and the copy take the
+     film's own width: image, rule and text then share one edge, which is what
+     makes the ending read as a product card rather than a caption under a
+     picture. A full-bleed or shifted film keeps the page-wide panel. */
+  .stage[data-reveal-fit='card'] .reveal {
+    /* Never below 56rem: a film that settled small would otherwise squeeze the
+       two columns into a column of broken lines. */
+    inline-size: min(max(calc(var(--media-w) * var(--reveal-zoom, 1)), 56rem), 100%);
   }
 
   /* Two columns on a wide stage — and also on a short, wide one, where a
      single stacked column would be taller than a landscape phone. */
   @media (width >= 62rem), ((min-aspect-ratio: 3 / 2) and (height <= 620px)) {
     .reveal {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+      grid-template-areas:
+        'meta meta'
+        'product cta';
     }
   }
 
-  .reveal__kicker,
+  .reveal__meta,
   .reveal__headline,
   .reveal__body,
   .cta {
@@ -166,14 +185,14 @@
       transform var(--dur-slow) var(--ease-out);
   }
 
-  :root[data-state='red-reveal'] :is(.reveal__kicker, .reveal__headline, .reveal__body, .cta),
-  :root[data-state='blue-reveal'] :is(.reveal__kicker, .reveal__headline, .reveal__body, .cta) {
+  :root[data-state='red-reveal'] :is(.reveal__meta, .reveal__headline, .reveal__body, .cta),
+  :root[data-state='blue-reveal'] :is(.reveal__meta, .reveal__headline, .reveal__body, .cta) {
     opacity: 1;
     transform: none;
   }
 
-  :root[data-state='red-reveal'] .reveal__kicker,
-  :root[data-state='blue-reveal'] .reveal__kicker {
+  :root[data-state='red-reveal'] .reveal__meta,
+  :root[data-state='blue-reveal'] .reveal__meta {
     transition-delay: 80ms;
   }
 
@@ -192,23 +211,108 @@
     transition-delay: 620ms;
   }
 
+  /* The rule under the film. Everything below it is the product card: the
+     label and the ending stamp sit on the rule, the copy hangs from it. */
+  .reveal__meta {
+    grid-area: meta;
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-m);
+    padding-block-end: var(--space-2xs);
+  }
+
+  .reveal__meta::before {
+    content: '';
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    block-size: 1px;
+    background: linear-gradient(
+      to right,
+      var(--hairline-strong) 0%,
+      var(--hairline) 46%,
+      rgb(16 20 26 / 8%) 100%
+    );
+    transform-origin: left;
+    /* The rule draws itself across the frame before the copy arrives. */
+    animation: reveal-rule-draw var(--dur-veil) var(--ease-out) 120ms backwards;
+  }
+
+  /* Short accent cap: the chosen branch signs the rule. Never the only
+     carrier of meaning — the label next to it says which branch it is. */
+  .reveal__meta::after {
+    content: '';
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: 0;
+    inline-size: 68px;
+    block-size: 2px;
+    background: var(--branch-accent, var(--ink-ghost));
+    transform-origin: left;
+    animation: reveal-rule-draw var(--dur-slow) var(--ease-out) 320ms backwards;
+  }
+
+  @keyframes reveal-rule-draw {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  /*
+    Attending to the call to action lights the card's signature: the accent
+    runs further along the rule and the edition mark lifts out of the wash.
+    Nothing moves and nothing is revealed — it is the card acknowledging that
+    someone is reading it.
+  */
+  .reveal__meta::after {
+    transition: inline-size var(--dur-mid) var(--ease-premium);
+  }
+
+  .reveal__stamp {
+    transition: color var(--dur-mid) var(--ease-premium);
+  }
+
+  .reveal:has(.cta :focus-visible) .reveal__meta::after {
+    inline-size: 116px;
+  }
+
+  .reveal:has(.cta :focus-visible) .reveal__stamp {
+    color: var(--ink-muted);
+  }
+
+  /* Pointer devices only: on touch the lit state would simply stick. */
+  @media (hover: hover) and (pointer: fine) {
+    .reveal:has(.cta:hover) .reveal__meta::after {
+      inline-size: 116px;
+    }
+
+    .reveal:has(.cta:hover) .reveal__stamp {
+      color: var(--ink-muted);
+    }
+  }
+
   .reveal__kicker {
     font-size: var(--step-micro);
     font-weight: 600;
     letter-spacing: var(--tracking-wide);
     text-transform: uppercase;
-    color: var(--ink-muted);
-    display: flex;
-    align-items: center;
-    gap: var(--space-2xs);
+    color: var(--ink);
   }
 
-  .reveal__kicker::before {
-    content: '';
-    inline-size: 26px;
-    block-size: 2px;
-    border-radius: 2px;
-    background: var(--branch-accent, var(--ink-ghost));
+  .reveal__stamp {
+    font-size: var(--step-micro);
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .reveal__product {
+    grid-area: product;
   }
 
   :root[data-branch='blue'] {
@@ -224,7 +328,7 @@
     font-weight: 600;
     line-height: 0.94;
     letter-spacing: var(--tracking-tight);
-    margin-block-start: var(--space-2xs);
+    text-wrap: balance;
   }
 
   .reveal__body {
@@ -232,10 +336,13 @@
     color: var(--ink-muted);
     max-inline-size: 34ch;
     margin-block-start: var(--space-xs);
+    text-wrap: pretty;
   }
 
   /* --- Final CTA -------------------------------------------------------- */
   .cta {
+    grid-area: cta;
+    position: relative;
     display: grid;
     gap: var(--space-2xs);
     padding-block-start: var(--space-s);
@@ -245,9 +352,24 @@
   @media (width >= 62rem), ((min-aspect-ratio: 3 / 2) and (height <= 620px)) {
     .cta {
       border-block-start: 0;
-      border-inline-start: 1px solid var(--hairline);
       padding-block-start: 0;
       padding-inline-start: var(--space-l);
+    }
+
+    /* The column rule fades downward, so it reads as a fold in the page
+       rather than a box drawn around the call to action. */
+    .cta::before {
+      content: '';
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      inline-size: 1px;
+      background: linear-gradient(
+        to bottom,
+        var(--hairline) 0%,
+        var(--hairline) 58%,
+        transparent 100%
+      );
     }
   }
 
@@ -255,6 +377,7 @@
     font-size: var(--step-lead);
     font-weight: 600;
     letter-spacing: var(--tracking-tight);
+    text-wrap: balance;
   }
 
   .cta__body,
@@ -273,6 +396,16 @@
     flex-wrap: wrap;
     gap: var(--space-2xs);
     margin-block-start: var(--space-xs);
+  }
+
+  /* The third action is a way back, not a way forward. It takes its own line
+     under the two that sell, flush with them, so the row above stays two clean
+     buttons instead of three that wrap differently at every width. */
+  .cta__actions .button--quiet {
+    flex-basis: 100%;
+    justify-content: flex-start;
+    padding-inline: 0;
+    margin-block-start: calc(var(--space-3xs) * -1);
   }
 
   .cta__hint {

@@ -135,6 +135,7 @@ export class ExperienceController {
       {
         section: requireElement('reveal'),
         kicker: requireElement('reveal-kicker'),
+        stamp: requireElement('reveal-stamp'),
         headline: requireElement('reveal-headline'),
         body: requireElement('reveal-body'),
         contact: requireElementOf('cta-contact', HTMLAnchorElement),
@@ -412,10 +413,19 @@ export class ExperienceController {
 
   /** Measures the panel, then settles the film clear of it. */
   #refreshRevealFit(): void {
-    // Measuring needs the panel in flow, so this waits one frame.
+    // Measuring needs the panel in flow, so this waits one frame. The card
+    // reveal then widens the panel to the settled film, which can rewrap the
+    // copy — so the fit is measured a second time against the width it just
+    // produced. Two passes, never a loop: the film is already easing over
+    // 760 ms, so the correction is not something a visitor can see.
     requestAnimationFrame(() => {
       if (!isBranchReveal(this.#machine.state)) return;
       this.#layout.applyRevealTransform(this.#reveal.measure());
+
+      requestAnimationFrame(() => {
+        if (!isBranchReveal(this.#machine.state)) return;
+        this.#layout.applyRevealTransform(this.#reveal.measure());
+      });
     });
   }
 
