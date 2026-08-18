@@ -148,6 +148,31 @@
       radial-gradient(140% 110% at 50% 50%, rgb(16 20 26 / 0%) 55%, rgb(16 20 26 / 8%) 100%);
   }
 
+  /*
+    The card ends the ambient's job.
+
+    The wash exists so a full-bleed film does not read as a rectangle pasted
+    onto a page. The card reveal answers that same problem better and by
+    different means: the film is given corners, a shadow and a margin, so it
+    becomes an object lying on a surface on purpose. A blurred enlargement of
+    the same frame behind it stops helping at that moment and starts competing
+    — and, being built from the frame's own edges, it also arrives lopsided:
+    measured around the card at the RED reveal, 187 to the left of it, 178 to
+    the right and 175 above. Cleared, the ground is the studio gradient this
+    stylesheet already falls back to, even at 189, 189 and 194.
+
+    The veil goes with it. Its whole job is settling the bands back to studio
+    tone, and there are no bands to settle.
+
+    Timed to the film's own settle, so the ground clears as the card lifts
+    rather than as a second event a moment later.
+  */
+  .stage[data-reveal-fit='card'] .ambient,
+  .stage[data-reveal-fit='card'] .ambient__veil {
+    opacity: 0;
+    transition: opacity 760ms var(--ease-out);
+  }
+
   /* ---------------------------------------------------------------------
      Poster and films share one geometry, written by StageLayout from the
      projection module. The element box is built at the exact source aspect
