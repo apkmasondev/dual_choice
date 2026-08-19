@@ -28,6 +28,25 @@ const TOP_CHROME_CLEARANCE = 72;
 /** Below this the product stops carrying the frame, so the stage veils instead. */
 const MIN_REVEAL_ZOOM = 0.5;
 
+/**
+ * Air left between the bottom of the product and the top of the panel.
+ *
+ * Without it the fit puts the product exactly on the panel's edge, and a panel
+ * that then grows by a line — a wrap that lands differently, a font that
+ * arrives late — lands that line on the product.
+ */
+const PRODUCT_CLEARANCE = 16;
+
+/**
+ * How close the product itself may come to the top of the stage.
+ *
+ * Much smaller than the clearance the *frame* keeps, and deliberately so: the
+ * wordmark and the sound control sit in the corners, while the product is
+ * centred, so they never meet. This is the margin that lets a short phone
+ * crop the empty wall above the product instead of shrinking the whole frame.
+ */
+const PRODUCT_TOP_CLEARANCE = 24;
+
 /** Stage proportions from which the reveal composes as a card rather than a band. */
 const LANDSCAPE_RATIO = 1.2;
 
@@ -144,6 +163,14 @@ export class StageLayout {
    * the product tiny for no gain. The constraint is the bottom of
    * PRODUCT_SAFE_RECT, not the film box.
    *
+   * Sliding is tried before scaling, and on a short phone that is the whole
+   * difference. Above the product there is nothing but studio wall, so a crop
+   * costs the composition nothing; scaling costs it twice, once in the size of
+   * the product and again in the frame's cropped left and right edges, which
+   * come on screen as two hard vertical lines the moment it stops being
+   * full-bleed. Only when even a full slide cannot clear the panel does the
+   * frame shrink.
+   *
    * Transform only, applied with `transform-origin: 50% 0%` — no layout is
    * animated and the hotspots are long gone by the time this runs.
    */
@@ -162,25 +189,56 @@ export class StageLayout {
       const margin = clamp(box.width * 0.05, 24, 96);
       ideal = Math.min((box.width - margin * 2) / rect.width, (panelTop - topMargin) / rect.height);
     } else {
+      const productTop = rect.y + (PRODUCT_SAFE_RECT.y / SOURCE_FRAME.height) * rect.height;
       const productBottom =
         rect.y +
         ((PRODUCT_SAFE_RECT.y + PRODUCT_SAFE_RECT.height) / SOURCE_FRAME.height) * rect.height;
-      if (productBottom <= panelTop) {
+
+      const needed = panelTop - PRODUCT_CLEARANCE - productBottom;
+      if (needed >= 0) {
         this.clearRevealTransform();
         return;
       }
+
+      // A slide alone, if the product's own top can take it.
+      if (needed >= PRODUCT_TOP_CLEARANCE - productTop) {
+        this.#writeRevealTransform(1, needed, rect, box, topMargin);
+        return;
+      }
+
       const span = productBottom - rect.y;
-      ideal = span > 0 ? (panelTop - topMargin) / span : 1;
+      ideal = span > 0 ? (panelTop - topMargin - PRODUCT_CLEARANCE) / span : 1;
     }
 
-    if (ideal >= 0.999) {
+    const zoom = clamp(Math.min(ideal, 1), MIN_REVEAL_ZOOM, 1);
+    const shift = topMargin - rect.y * zoom;
+
+    /*
+      Nothing to do only when there is nothing to scale *and* nothing to slide.
+
+      This used to return as soon as `ideal` reached 1, and on a portrait phone
+      that is the common case rather than the rare one: the film needs no
+      shrinking, it needs to move up. Bailing out here left the frame exactly
+      where it was and dropped the slide with it, so the sales copy was printed
+      across the product on every phone wide enough not to need the scale —
+      165 px of overlap on a 390x844 screen, 84 px on a 430x932.
+    */
+    if (zoom >= 0.999 && Math.abs(shift) < 0.5) {
       this.clearRevealTransform();
       return;
     }
 
-    const zoom = clamp(ideal, MIN_REVEAL_ZOOM, 1);
-    const shift = topMargin - rect.y * zoom;
+    this.#writeRevealTransform(zoom, shift, rect, box, topMargin, ideal);
+  }
 
+  #writeRevealTransform(
+    zoom: number,
+    shift: number,
+    rect: MediaRect,
+    box: { readonly width: number; readonly height: number },
+    topMargin: number,
+    ideal = zoom,
+  ): void {
     const style = this.#stage.style;
     style.setProperty('--reveal-zoom', zoom.toFixed(4));
     style.setProperty('--reveal-shift', `${shift.toFixed(2)}px`);

@@ -257,9 +257,44 @@
     opacity: 1;
   }
 
-  /* When the copy sits in the ambient band there is nothing to veil. */
-  .stage[data-copy-placement='below'] .stage__scrim {
+  /* When the copy sits in the ambient band there is nothing to veil — which
+     stops being true at the reveal, where the panel is tall enough to climb
+     back up onto the frame. */
+  :root:not([data-state$='-reveal']) .stage[data-copy-placement='below'] .stage__scrim {
     opacity: 0 !important;
+  }
+
+  /*
+    The copy's ground wherever the frame only slid.
+
+    There is no room to draw the film back into a card on a phone — the frame
+    is already a band and shrinking it would make the product tiny — so the
+    copy is seated on the frame's own lower half instead. Left bare, that half
+    is the busiest part of the shot: the podium, its edge and the reflections
+    all run straight under the sales copy.
+
+    Keyed to the fit rather than to the copy's placement, because both portrait
+    placements land here and the reason is the same in each. `card` is excluded
+    — there the copy already has clean studio ground under it — and `crowded`
+    keeps the full veil it defines below.
+
+    The wash is anchored to the frame's live bottom edge rather than to a
+    percentage of the screen, because that edge moves: the film slides up by
+    176 px on a 390x844 screen and by 202 px on a 430x932 one, and a gradient
+    pinned to the viewport would sit in the wrong place on both. It starts
+    below the product, so nothing is veiled that the visitor came to look at.
+  */
+  :root[data-state$='-reveal'] .stage[data-reveal-fit='shifted'] .stage__scrim {
+    --ground: calc(var(--frame-y, 0px) + var(--frame-h, 0px));
+
+    opacity: 1;
+    background: linear-gradient(
+      to bottom,
+      rgb(178 184 190 / 0%) calc(var(--ground) - 92px),
+      rgb(179 185 191 / 58%) calc(var(--ground) - 18px),
+      rgb(180 186 192 / 84%) var(--ground),
+      rgb(180 186 192 / 92%) 100%
+    );
   }
 
   /* A stage too short to give the panel its own room — a landscape phone, say.

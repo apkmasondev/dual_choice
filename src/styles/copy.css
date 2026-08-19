@@ -130,6 +130,20 @@
     margin-inline: auto;
   }
 
+  /*
+    On a phone the headline used to run margin to margin on a single line —
+    340 px of type in 350 px of room. A line that only just fits reads as
+    barely fitting, which is the opposite of composed. Given a measure it has
+    to break inside, it becomes two balanced lines and can afford to be larger
+    at the same time, which is what a display line on a phone should be.
+  */
+  .stage[data-copy-placement='below'] .choice-copy__headline {
+    max-inline-size: min(20rem, 76vw);
+    margin-inline: auto;
+    font-size: clamp(2rem, 9.2vw, 2.6rem);
+    text-wrap: balance;
+  }
+
   .stage[data-copy-placement='overlay'] .choice-copy {
     inset-inline-start: var(--safe-inline);
     inset-block-end: calc(var(--safe-bottom) + var(--space-s));
@@ -302,6 +316,29 @@
 
   .reveal__product {
     grid-area: product;
+  }
+
+  /*
+    Landscape phone: the chrome already owns that line.
+
+    A stage this short gives the panel no room below the wordmark, so the
+    branch label came to rest underneath it — close enough that the hairline
+    under APK ran through the word DESIRE, and the one under SOUND through the
+    edition stamp. Two rules sixteen pixels apart read as a mistake even when
+    they miss each other.
+
+    The label and the stamp step aside here rather than the chrome, which
+    carries the way back and the sound control and cannot. What stays is the
+    rule itself with its branch-coloured head, so the ending still opens the
+    way every other size does, and the headline underneath still says which of
+    the two realities this is.
+  */
+  .stage[data-reveal-fit='crowded'] :is(.reveal__kicker, .reveal__stamp) {
+    display: none;
+  }
+
+  .stage[data-reveal-fit='crowded'] .reveal__meta {
+    padding-block-end: 0;
   }
 
   :root[data-branch='blue'] {

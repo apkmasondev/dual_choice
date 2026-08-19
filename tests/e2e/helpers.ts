@@ -156,6 +156,37 @@ async function nextFrame(page: Page): Promise<void> {
 }
 
 /**
+ * Waits for the film to stop moving at the reveal.
+ *
+ * Reaching `<branch>-reveal` only says the state changed. The fit is computed
+ * a frame later and the frame then eases into place over 760 ms, so anything
+ * measured on the state attribute alone is measuring mid-flight — which is a
+ * difference of 151 px on a 375x667 screen, and looks exactly like the bug
+ * this waits to let settle.
+ */
+export async function waitForRevealSettled(page: Page): Promise<void> {
+  const read = async (): Promise<string> =>
+    page.evaluate(() => {
+      const film = document.querySelector<HTMLVideoElement>('.film[data-active="true"]');
+      if (!film) return '';
+      const rect = film.getBoundingClientRect();
+      return [rect.x, rect.y, rect.width, rect.height].map((n) => n.toFixed(1)).join('|');
+    });
+
+  await expect
+    .poll(
+      async () => {
+        const first = await read();
+        if (first === '') return false;
+        await nextFrame(page);
+        return (await read()) === first;
+      },
+      { message: 'the film never stopped moving at the reveal', timeout: 15_000 },
+    )
+    .toBe(true);
+}
+
+/**
  * Resizes the viewport and waits for the stage to finish reacting to it.
  *
  * Counting animation frames after a resize is a guess: the browser hands the

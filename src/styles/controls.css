@@ -280,6 +280,12 @@
     }
   }
 
+  /* The panel's own rule is the only one that fits on a landscape phone; see
+     the note beside the reveal meta row. */
+  .stage[data-reveal-fit='crowded'] :is(.brand, .sound-toggle)::after {
+    opacity: 0;
+  }
+
   /* --- Film timeline -----------------------------------------------------
      Scrolling drives a film, and until now nothing said how far through it
      the visitor was. One hairline, in the same language as the rule under the

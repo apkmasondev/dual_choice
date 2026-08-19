@@ -5,6 +5,7 @@ import {
   reachChoice,
   resizeStage,
   skipToReveal,
+  waitForRevealSettled,
 } from './helpers.ts';
 
 test.describe('mobile', () => {
@@ -56,6 +57,47 @@ test.describe('mobile', () => {
       await expect(page.locator('html')).toHaveAttribute('data-state', 'choice');
       await expectHotspotOnObject(page, 'blue');
       await expectHotspotOnObject(page, 'red');
+    }
+  });
+
+  /*
+    The one thing the reveal must never do on a phone.
+
+    There is no room to draw the film back into a card on a portrait screen,
+    so it slides up instead — and if that slide is dropped, or is not enough,
+    the sales copy is printed straight across the product. That is exactly
+    what happened: the fit returned early whenever the frame needed no
+    scaling, which on a phone is the common case, and left 165 px of overlap
+    on a 390x844 screen. Nothing in this suite noticed, because nothing
+    measured it.
+  */
+  test('the product clears the sales copy on every phone', async ({ page }) => {
+    for (const viewport of [
+      { width: 375, height: 667 },
+      { width: 390, height: 844 },
+      { width: 430, height: 932 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await reachChoice(page);
+      await chooseBranch(page, 'red');
+      await skipToReveal(page, 'red');
+      await waitForRevealSettled(page);
+
+      const clearance = await page.evaluate(() => {
+        const film = document.querySelector<HTMLVideoElement>('.film[data-active="true"]');
+        const panel = document.getElementById('reveal');
+        if (!film || !panel) return null;
+        const frame = film.getBoundingClientRect();
+        // Bottom of PRODUCT_SAFE_RECT: 150 + 370 of the 720 source rows.
+        const productBottom = frame.y + (520 / 720) * frame.height;
+        return panel.getBoundingClientRect().top - productBottom;
+      });
+
+      expect(clearance, `no reveal panel at ${viewport.width}x${viewport.height}`).not.toBeNull();
+      expect(
+        clearance!,
+        `the copy sits on the product at ${viewport.width}x${viewport.height}`,
+      ).toBeGreaterThanOrEqual(0);
     }
   });
 
