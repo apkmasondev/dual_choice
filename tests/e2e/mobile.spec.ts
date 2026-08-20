@@ -104,37 +104,42 @@ test.describe('mobile', () => {
   });
 
   /*
-    The address bar sliding away must not scroll the page.
+    The whole reason the phone stopped scrubbing.
 
-    It happens during the visitor's very first swipe — the one moment they are
-    certainly touching the screen — and it changes `scrollHeight - innerHeight`
-    without anyone scrolling. The scrub used to answer that by pulling the page
-    back to the position that preserved its progress, which on a 390 px screen
-    with an 84 px bar moved the page 21 px out from under the finger. The film
-    absorbs the change instead now, four frames of it, smoothed.
+    A coarse pointer gets the film played to it: no scroll map, no hint asking
+    for a gesture that does nothing, and the choice arriving when the film
+    ends rather than when a finger drags far enough.
   */
-  test('the address bar sliding away does not move the page', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 760 });
+  test('the intro plays itself and hands over at the end', async ({ page }) => {
     await gotoExperience(page);
     await enterMuted(page);
     await expect(page.locator('html')).toHaveAttribute('data-state', 'intro', { timeout: 25_000 });
 
-    // Pin the scroll map at its current height, the way `svh` holds still on a
-    // phone while the chrome slides, then scrub a quarter of the way in.
-    await page.evaluate(() => {
-      const track = document.getElementById('scroll-track');
-      if (track) track.style.blockSize = `${track.getBoundingClientRect().height}px`;
-      const range = document.documentElement.scrollHeight - globalThis.innerHeight;
-      globalThis.scrollTo(0, range * 0.25);
+    const setup = await page.evaluate(() => ({
+      drive: document.documentElement.dataset['drive'],
+      scrollable: document.documentElement.scrollHeight - globalThis.innerHeight,
+      playing: !document.querySelector<HTMLVideoElement>('#film-intro')?.paused,
+    }));
+    expect(setup.drive, 'a touch device should not be asked to scrub').toBe('playback');
+    expect(setup.scrollable, 'there is nothing to scroll').toBeLessThanOrEqual(1);
+    expect(setup.playing, 'the film should run under its own power').toBe(true);
+
+    // SKIP is armed throughout, so nobody is held to the ten seconds.
+    await expect(page.locator('#skip')).toHaveAttribute('data-visible', 'true', {
+      timeout: 15_000,
     });
-    await page.waitForTimeout(1200);
-    const before = await page.evaluate(() => Math.round(globalThis.scrollY));
 
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.waitForTimeout(600);
-    const after = await page.evaluate(() => Math.round(globalThis.scrollY));
+    // Left alone, the film reaches the end and hands over by itself.
+    await expect(page.locator('html')).toHaveAttribute('data-state', 'choice', { timeout: 25_000 });
+    await expect(page.locator('#skip')).toBeHidden();
+    await expect(page.locator('#hotspot-blue')).toHaveAttribute('tabindex', '0');
 
-    expect(after, 'the page moved when the address bar hid').toBe(before);
+    // And it can do it a second time. The controller latches "this film has
+    // ended" so a stray event cannot hand over twice; a replay that inherited
+    // that latch ran to the end and handed over to nobody.
+    await page.locator('#brand-home').click();
+    await expect(page.locator('html')).toHaveAttribute('data-state', 'intro', { timeout: 20_000 });
+    await expect(page.locator('html')).toHaveAttribute('data-state', 'choice', { timeout: 25_000 });
   });
 
   test('every control meets the 44px touch target minimum', async ({ page }) => {

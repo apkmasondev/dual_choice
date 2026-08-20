@@ -58,6 +58,12 @@
     transition: opacity var(--dur-fast) linear;
   }
 
+  /* Nothing to scroll, so nothing to ask for. The timeline under the stage
+     carries the film's position instead, and SKIP carries the way past it. */
+  :root[data-drive='playback'] .scroll-hint {
+    display: none;
+  }
+
   .scroll-hint__rule {
     inline-size: 1px;
     block-size: 34px;

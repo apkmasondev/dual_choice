@@ -190,6 +190,37 @@ test.describe('desktop journey', () => {
     }
   });
 
+  /*
+    A range change mid-scrub must not move the page.
+
+    Anything that changes `scrollHeight - innerHeight` while the film is being
+    scrubbed — a window resized by hand here, an address bar sliding away on a
+    device that still scrubbed — used to be answered by pulling the page back
+    to the position that preserved the film's progress. That is 21 px of page
+    moving under a pointer that is mid-gesture. The film absorbs the change
+    instead, and its own smoothing spreads it over about 200 ms.
+  */
+  test('a resize during the scrub does not move the page', async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 900 });
+    await gotoExperience(page);
+    await enterMuted(page);
+    await expect(page.locator('html')).toHaveAttribute('data-state', 'intro', { timeout: 20_000 });
+
+    await page.evaluate(() => {
+      const track = document.getElementById('scroll-track');
+      if (track) track.style.blockSize = `${track.getBoundingClientRect().height}px`;
+      const range = document.documentElement.scrollHeight - globalThis.innerHeight;
+      globalThis.scrollTo(0, range * 0.25);
+    });
+    await page.waitForTimeout(1200);
+    const before = await page.evaluate(() => Math.round(globalThis.scrollY));
+
+    await page.setViewportSize({ width: 1200, height: 984 });
+    await page.waitForTimeout(600);
+
+    expect(await page.evaluate(() => Math.round(globalThis.scrollY))).toBe(before);
+  });
+
   test('there is no horizontal overflow at any tested width', async ({ page }) => {
     await reachChoice(page);
     for (const width of [2560, 1920, 1440, 1366, 1024]) {

@@ -1,12 +1,14 @@
 import {
-  BRANCH_PRELOAD_PROGRESS,
   BRANCH_POSTER,
+  BRANCH_PRELOAD_PROGRESS,
   INTRO_FRAME_DURATION,
+  type IntroDrive,
+  pickIntroDrive,
   pickVariant,
-  posterSource,
-  videoSource,
   type PosterId,
+  posterSource,
   type VariantId,
+  videoSource,
 } from '../config/media.ts';
 import { COPY } from '../content/copy.ts';
 import {
@@ -65,9 +67,11 @@ export class ExperienceController {
   readonly #branches: Record<BranchId, VideoController>;
 
   readonly #variant: VariantId;
+  readonly #drive: IntroDrive;
   #lastFrameTime = 0;
   #rafHandle = 0;
   #branchesUpgraded = false;
+  #introEndWired = false;
   #cancelSkipReveal: (() => void) | null = null;
   #cancelFollow: (() => void) | null = null;
 
@@ -101,6 +105,9 @@ export class ExperienceController {
       { width: globalThis.innerWidth, height: globalThis.innerHeight },
       prefersReducedData(),
     );
+
+    this.#drive = pickIntroDrive(globalThis.matchMedia('(pointer: coarse)').matches);
+    document.documentElement.dataset['drive'] = this.#drive;
 
     const videoOptions = {
       frameDuration: INTRO_FRAME_DURATION,
@@ -307,8 +314,41 @@ export class ExperienceController {
     await this.#intro.seekAndSettle(0);
     this.#showFilm(this.#intro);
     this.#machine.transition('intro');
+
+    if (this.#drive === 'playback') {
+      await this.#playIntro();
+      this.#live.announce(COPY.intro.livePlay);
+      return;
+    }
+
     this.#scrubber.start();
     this.#live.announce(COPY.intro.liveEnter);
+  }
+
+  /**
+   * Runs the intro under its own power, for pointers that cannot scrub.
+   *
+   * The end handler is registered once for the life of the page — the
+   * controller has no way to take one off again, and a restart comes back
+   * through here.
+   */
+  async #playIntro(): Promise<void> {
+    if (!this.#introEndWired) {
+      this.#introEndWired = true;
+      this.#intro.onEnded(() => {
+        if (this.#machine.state !== 'intro') return;
+        this.#hideSkip();
+        this.#enterChoice();
+      });
+    }
+
+    // `reset` first, every time: the controller latches "this film has ended"
+    // so a stray event cannot fire the handover twice, and a replay that skips
+    // the reset inherits that latch — the film runs to the end again and hands
+    // over to nobody. Which is exactly what the wordmark restart did.
+    this.#intro.reset();
+    this.#armSkip();
+    await this.#intro.play();
   }
 
   #startLoop(): void {
@@ -320,11 +360,27 @@ export class ExperienceController {
       this.#layout.flush();
       // Cap dt so a backgrounded tab does not resume with a huge jump.
       this.#scrubber.update(Math.min(dt, 0.1));
+      this.#reportPlayback();
       this.#ambient.update(now);
 
       this.#rafHandle = requestAnimationFrame(step);
     };
     this.#rafHandle = requestAnimationFrame(step);
+  }
+
+  /**
+   * Feeds the timeline while the intro plays under its own power.
+   *
+   * Read here rather than from `timeupdate`, which the spec lets fire as
+   * rarely as every 250 ms: measured, that was six updates across ninety
+   * frames, and each one moved the hairline ten pixels at once. The loop is
+   * already running for the scrub and the ambient, so this is one property
+   * read per frame in a frame that was happening anyway.
+   */
+  #reportPlayback(): void {
+    if (this.#drive !== 'playback' || this.#machine.state !== 'intro') return;
+    const duration = this.#intro.duration;
+    if (duration > 0) this.#onProgress(this.#intro.element.currentTime / duration);
   }
 
   #onProgress(progress: number): void {
@@ -492,6 +548,16 @@ export class ExperienceController {
   }
 
   async #skip(): Promise<void> {
+    // On a played intro, SKIP is the way past the ten seconds.
+    if (this.#machine.state === 'intro') {
+      this.#intro.pause();
+      await this.#intro.seekAndSettle(safeEndTime(this.#intro.duration, INTRO_FRAME_DURATION));
+      this.#hideSkip();
+      this.#onProgress(1);
+      this.#enterChoice();
+      return;
+    }
+
     const branch = this.#machine.branch;
     if (!branch) return;
     const video = this.#branches[branch];
@@ -566,7 +632,14 @@ export class ExperienceController {
     if (this.#machine.state === 'choice' && !this.#machine.transition('intro')) return;
 
     this.#hotspots.setInteractive(false);
-    this.#scrubber.scrollToStart();
+
+    if (this.#drive === 'playback') {
+      this.#onProgress(0);
+      void this.#playIntro();
+    } else {
+      this.#scrubber.scrollToStart();
+    }
+
     this.#live.announce(COPY.brand.liveRestart);
   }
 

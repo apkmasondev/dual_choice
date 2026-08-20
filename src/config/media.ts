@@ -76,13 +76,29 @@ export function pickVariant(
   return Math.min(viewport.width, viewport.height) >= 700 ? 'wide' : 'narrow';
 }
 
+/** Who moves the film through the intro. */
+export type IntroDrive = 'scroll' | 'playback';
+
 /**
- * Scroll map length as a multiple of the viewport height.
+ * Scrolling drives the film with a wheel; on a phone it drives it with a
+ * finger, and a finger is attached to a browser that hides its address bar
+ * during the first swipe. That single event changes the scroll range under
+ * the gesture, and there is no answer to it that is not a compromise: hold
+ * the film and the page slips 21 px under the finger, hold the page and the
+ * film jumps four frames. Underneath that sit rubber-banding, momentum and a
+ * scroll position the page does not own.
  *
- * Shorter on phones: a long scroll map is tiring on a small screen and
- * multiplies the number of seeks (plan section 6.1).
+ * So a coarse pointer gets the film played to it instead. It is the same ten
+ * seconds and the same last frame; what goes away is asking a finger to be a
+ * jog wheel. SKIP is armed throughout, so nobody is held to the ten seconds.
+ *
+ * Keyed to the pointer rather than to the viewport, because the problem is the
+ * finger, not the width: a small desktop window still has a wheel and keeps
+ * the scrub.
  */
-export const SCROLL_LENGTH_VH = { desktop: 340, mobile: 280 } as const;
+export function pickIntroDrive(coarsePointer: boolean): IntroDrive {
+  return coarsePointer ? 'playback' : 'scroll';
+}
 
 /** Progress at which the branches are promoted from `metadata` to full preload. */
 export const BRANCH_PRELOAD_PROGRESS = 0.55;

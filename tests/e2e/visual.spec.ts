@@ -1,5 +1,12 @@
-import { test } from '@playwright/test';
-import { chooseBranch, enterMuted, gotoExperience, reachChoice, skipToReveal } from './helpers.ts';
+import { devices, test } from '@playwright/test';
+import {
+  advanceToChoice,
+  chooseBranch,
+  enterMuted,
+  gotoExperience,
+  reachChoice,
+  skipToReveal,
+} from './helpers.ts';
 
 /**
  * Reference stills for review.
@@ -89,36 +96,46 @@ test.describe('visual reference', () => {
     await page.screenshot({ path: `${OUT}/ultrawide-choice.png` });
   });
 
-  test('mobile states', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+  /*
+    Taken through a real touch context, not merely at a phone-sized viewport.
+    A coarse pointer gets the intro played rather than scrubbed, and these
+    stills are supposed to show what a phone shows.
+  */
+  test('mobile states', async ({ browser }) => {
+    const context = await browser.newContext({ ...devices['Pixel 7'] });
+    const page = await context.newPage();
 
     await gotoExperience(page);
+    await page.waitForTimeout(1600);
     await page.screenshot({ path: `${OUT}/mobile-01-entry.png` });
 
     await enterMuted(page);
-    await page.evaluate(() => {
-      globalThis.scrollTo(0, document.documentElement.scrollHeight);
-    });
-    await page.waitForFunction(() => document.documentElement.dataset['state'] === 'choice', null, {
-      timeout: 20_000,
-    });
+    await page.waitForTimeout(2200);
+    await page.screenshot({ path: `${OUT}/mobile-02-intro-playing.png` });
+
+    await advanceToChoice(page);
     await page.waitForTimeout(900);
-    await page.screenshot({ path: `${OUT}/mobile-02-choice-portrait.png` });
+    await page.screenshot({ path: `${OUT}/mobile-03-choice-portrait.png` });
 
     await chooseBranch(page, 'red');
     await skipToReveal(page, 'red');
     await page.waitForTimeout(1600);
-    await page.screenshot({ path: `${OUT}/mobile-03-red-reveal.png` });
+    await page.screenshot({ path: `${OUT}/mobile-04-red-reveal.png` });
 
     await page.setViewportSize({ width: 844, height: 390 });
     await page.waitForTimeout(700);
-    await page.screenshot({ path: `${OUT}/mobile-04-reveal-landscape.png` });
+    await page.screenshot({ path: `${OUT}/mobile-05-reveal-landscape.png` });
+    await context.close();
   });
 
-  test('mobile landscape choice', async ({ page }) => {
-    await page.setViewportSize({ width: 844, height: 390 });
+  test('mobile landscape choice', async ({ browser }) => {
+    const context = await browser.newContext({
+      ...devices['Pixel 7 landscape'],
+    });
+    const page = await context.newPage();
     await reachChoice(page);
     await page.waitForTimeout(900);
-    await page.screenshot({ path: `${OUT}/mobile-05-choice-landscape.png` });
+    await page.screenshot({ path: `${OUT}/mobile-06-choice-landscape.png` });
+    await context.close();
   });
 });

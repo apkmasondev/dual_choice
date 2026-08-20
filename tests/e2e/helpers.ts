@@ -25,10 +25,32 @@ export async function scrollToChoice(page: Page): Promise<void> {
   await expect(page.locator('html')).toHaveAttribute('data-state', 'choice', { timeout: 20_000 });
 }
 
+/**
+ * Reaches CHOICE whichever way the device under test drives the film.
+ *
+ * A coarse pointer gets the intro played to it rather than scrubbed, so there
+ * is no scroll map to drag: SKIP is the visitor's own way past the ten
+ * seconds, and using it here keeps the suite from waiting out a film per test.
+ * The film's own ending is covered separately.
+ */
+export async function advanceToChoice(page: Page): Promise<void> {
+  const drive = await page.evaluate(() => document.documentElement.dataset['drive'] ?? 'scroll');
+
+  if (drive === 'playback') {
+    const skip = page.locator('#skip');
+    await expect(skip).toHaveAttribute('data-visible', 'true', { timeout: 15_000 });
+    await skip.click();
+    await expect(page.locator('html')).toHaveAttribute('data-state', 'choice', { timeout: 20_000 });
+    return;
+  }
+
+  await scrollToChoice(page);
+}
+
 export async function reachChoice(page: Page): Promise<void> {
   await gotoExperience(page);
   await enterMuted(page);
-  await scrollToChoice(page);
+  await advanceToChoice(page);
 }
 
 export interface HotspotProbe {

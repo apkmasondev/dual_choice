@@ -6,6 +6,8 @@
     movement, drifting copy and looping decoration — and an explicit
     "PLAY PRODUCT FILM" button puts the film back under their control.
   */
+  /* The other mode with no scroll map is `data-drive="playback"`, in base.css.
+     Two reasons, one outcome; kept apart so each mode owns its own rule. */
   :root[data-motion='reduced'] .scroll-track {
     block-size: 100svh;
   }

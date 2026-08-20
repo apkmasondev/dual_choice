@@ -31,6 +31,8 @@ export const COPY = {
     scrollHint: 'SCROLL TO ENTER',
     /** Announced to assistive technology when the intro begins. */
     liveEnter: 'Introduction started. Scroll to move through the film.',
+    /** The same moment where the film plays itself instead. */
+    livePlay: 'Introduction playing. The choice follows when the film ends.',
   },
 
   choice: {

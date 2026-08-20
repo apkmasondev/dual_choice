@@ -37,6 +37,12 @@
     pointer-events: none;
   }
 
+  /* Where the film plays itself there is nothing to scroll, and a page that
+     scrolls without moving anything is a page that feels broken. */
+  :root[data-drive='playback'] .scroll-track {
+    block-size: 100svh;
+  }
+
   .skip-link {
     position: fixed;
     inset-block-start: var(--safe-top);

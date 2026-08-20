@@ -123,7 +123,9 @@
     --space-above-media: 0px;
     --ambient-scale: 20;
 
-    /* Scroll map length. Shorter on phones (plan section 6.1). */
+    /* Scroll map length, for the pointers that scrub. Shorter on a small
+       window, where a long map is tiring (plan section 6.1); a coarse pointer
+       has no map at all — see `pickIntroDrive`. */
     --scroll-vh: 340;
   }
 

@@ -1,8 +1,10 @@
 # APK — DUAL / CHOICE
 
-A short, cinematic product experience. The visitor scrolls a film to the moment
-a figure holds out two objects, picks one **directly on the image**, watches
-that object become a product, and lands on APK's call to action.
+A short, cinematic product experience. A film runs to the moment a figure holds
+out two objects; the visitor picks one **directly on the image**, watches that
+object become a product, and lands on APK's call to action. A pointer that can
+scrub drives the film by scrolling; a coarse pointer has it played instead —
+see [Two ways to drive the intro](#two-ways-to-drive-the-intro).
 
 Built from `APK_DUAL_CHOICE_PLAN.md`. Where the plan and the delivered assets
 disagreed, the assets won — the differences are listed under
@@ -240,9 +242,31 @@ skipped.
 
 **Choice hand-over** waits for both the scroll (at least 98.5%) and the decoder
 (within two frames of the end), with hysteresis so jitter cannot flicker the
-hotspots. Resizing re-anchors the scroll position to the progress already
-reached, so a window resize or a retracting mobile browser bar never drags the
-film off the frame it was holding.
+hotspots. A played intro hands over on the film's own `ended` instead.
+
+**Resizing mid-scrub** used to re-anchor the scroll position to the progress
+already reached. It no longer does: pulling the page back under a pointer that
+is mid-gesture is louder than the thing it fixes, so the film absorbs the
+change and its own smoothing spreads it over about 200 ms. At CHOICE the
+re-anchor stands, because there nothing is being scrubbed and the frame has to
+stay exactly where the hotspots were measured against.
+
+### Two ways to drive the intro
+
+`(pointer: coarse)` decides, and it is the pointer rather than the width that
+decides: a small desktop window still has a wheel.
+
+| | scroll | playback |
+| --- | --- | --- |
+| Who moves the film | the visitor, by scrolling | the film, at its own rate |
+| Scroll map | 280–340 vh | collapsed to one screen |
+| Hand-over to CHOICE | scroll ≥ 98.5% + decoder | the film's `ended` |
+| Way past it | keep scrolling | `SKIP`, armed throughout |
+
+A finger is a poor jog wheel, and the browser it comes with hides its address
+bar during the first swipe — which changes the scroll range mid-gesture, with
+no answer that is not a compromise. Playing the film removes the question. It
+is the same ten seconds and the same last frame.
 
 **Branch transition.** The branch fades in _over_ the intro rather than
 crossfading both, so the backdrop can never show through the join. It lasts
@@ -416,9 +440,10 @@ current browser behaviour and lost.
    they run in CI on Windows or Linux without a shell dependency.
 7. **The ambient backdrop is a canvas, not a second `<video>`.** Same result at
    a fraction of the cost, and it cannot drift out of sync with the foreground.
-8. **The scrollbar is hidden.** This is a scroll-driven film, not a document;
-   the affordance is carried by the `SCROLL TO ENTER` cue, and keyboard
-   scrolling is unaffected.
+8. **The scrollbar is hidden.** Where the film is scrubbed this is a film, not
+   a document; the affordance is carried by the `SCROLL TO ENTER` cue, and
+   keyboard scrolling is unaffected. Where it is played there is nothing to
+   scroll and the cue is not shown.
 9. **No JSON-LD.** The plan permits it only with real data, and there is none to
    state.
 
