@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 import {
   chooseBranch,
+  enterMuted,
   expectHotspotOnObject,
+  gotoExperience,
   reachChoice,
   resizeStage,
   skipToReveal,
@@ -99,6 +101,40 @@ test.describe('mobile', () => {
         `the copy sits on the product at ${viewport.width}x${viewport.height}`,
       ).toBeGreaterThanOrEqual(0);
     }
+  });
+
+  /*
+    The address bar sliding away must not scroll the page.
+
+    It happens during the visitor's very first swipe — the one moment they are
+    certainly touching the screen — and it changes `scrollHeight - innerHeight`
+    without anyone scrolling. The scrub used to answer that by pulling the page
+    back to the position that preserved its progress, which on a 390 px screen
+    with an 84 px bar moved the page 21 px out from under the finger. The film
+    absorbs the change instead now, four frames of it, smoothed.
+  */
+  test('the address bar sliding away does not move the page', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 760 });
+    await gotoExperience(page);
+    await enterMuted(page);
+    await expect(page.locator('html')).toHaveAttribute('data-state', 'intro', { timeout: 25_000 });
+
+    // Pin the scroll map at its current height, the way `svh` holds still on a
+    // phone while the chrome slides, then scrub a quarter of the way in.
+    await page.evaluate(() => {
+      const track = document.getElementById('scroll-track');
+      if (track) track.style.blockSize = `${track.getBoundingClientRect().height}px`;
+      const range = document.documentElement.scrollHeight - globalThis.innerHeight;
+      globalThis.scrollTo(0, range * 0.25);
+    });
+    await page.waitForTimeout(1200);
+    const before = await page.evaluate(() => Math.round(globalThis.scrollY));
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(600);
+    const after = await page.evaluate(() => Math.round(globalThis.scrollY));
+
+    expect(after, 'the page moved when the address bar hid').toBe(before);
   });
 
   test('every control meets the 44px touch target minimum', async ({ page }) => {

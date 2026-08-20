@@ -117,6 +117,25 @@ test.describe('desktop journey', () => {
     await expectHotspotOnObject(page, 'blue');
   });
 
+  test('the wordmark takes SKIP away with the film it winds back', async ({ page }) => {
+    await reachChoice(page);
+    await chooseBranch(page, 'red');
+    await expect(page.locator('#skip')).toHaveAttribute('data-visible', 'true', {
+      timeout: 15_000,
+    });
+
+    await page.getByRole('link', { name: /back to the beginning/i }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-state', 'intro', { timeout: 15_000 });
+
+    // SKIP belongs to a film that is playing, and there is no longer one. It
+    // used to survive this route and then sit over the scrub and the choice
+    // for the rest of the session, which looked random because it depended on
+    // having tapped the wordmark during a film.
+    await expect(page.locator('#skip')).toBeHidden();
+    await scrollToChoice(page);
+    await expect(page.locator('#skip')).toBeHidden();
+  });
+
   test('the wordmark also winds back a film that is still playing', async ({ page }) => {
     await reachChoice(page);
     await chooseBranch(page, 'red');

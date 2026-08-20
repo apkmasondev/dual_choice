@@ -417,7 +417,6 @@ export class ExperienceController {
   }
 
   #completeBranch(branch: BranchId): void {
-    this.#cancelSkipReveal?.();
     this.#hideSkip();
     if (!this.#machine.completePlayback(branch)) return;
     this.#openReveal(branch);
@@ -476,7 +475,18 @@ export class ExperienceController {
     }, SKIP_REVEAL_AFTER_MS);
   }
 
+  /**
+   * Puts SKIP away, including the timer that would otherwise bring it back.
+   *
+   * The cancel used to live at the one call site that remembered it, which is
+   * how the button escaped: the wordmark restart leaves a branch film mid-play
+   * and never came through here, so SKIP stayed on screen for the rest of the
+   * session — over the choice, over the scrub, everywhere. It looked random
+   * because it depended on having tapped the wordmark during a film.
+   */
   #hideSkip(): void {
+    this.#cancelSkipReveal?.();
+    this.#cancelSkipReveal = null;
     delete this.#skipButton.dataset['visible'];
     this.#skipButton.hidden = true;
   }
@@ -569,6 +579,7 @@ export class ExperienceController {
     this.#reveal.hide();
     this.#layout.clearRevealTransform();
     this.#followFilm();
+    this.#hideSkip();
     this.#playFilmButton.hidden = true;
     delete document.documentElement.dataset['branch'];
 

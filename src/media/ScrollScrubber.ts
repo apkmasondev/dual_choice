@@ -128,6 +128,19 @@ export class ScrollScrubber {
    * progress and scrubs the film off the frame it was holding, which at CHOICE
    * would drag the objects out from under the hotspots. Re-anchoring
    * `scrollY` to the progress we already had makes the resize invisible.
+   *
+   * Only at CHOICE, though. The address bar on a phone slides away during the
+   * visitor's very first swipe, which is the one moment they are certainly
+   * touching the screen — and scrolling the page out from under a finger is a
+   * far louder artifact than the thing it fixes. Measured on a 390 px screen
+   * with an 84 px bar: the page jolted 21 px and the film jumped five frames.
+   * Left to itself the same event moves the film about four frames, and the
+   * scrub's own smoothing spreads those over half a second, which reads as the
+   * film moving rather than as the page slipping.
+   *
+   * At CHOICE nothing is being scrubbed and nobody is mid-gesture: the frame
+   * has to stay exactly where the hotspots were measured against, so there the
+   * page is still pulled back into place.
    */
   #reanchor(range: number): void {
     if (this.#lastRange === 0 || Math.abs(range - this.#lastRange) <= 1) {
@@ -135,6 +148,8 @@ export class ScrollScrubber {
       return;
     }
     this.#lastRange = range;
+    if (!this.#atChoice) return;
+
     const target = this.#progress * range;
     if (Math.abs(target - globalThis.scrollY) < 1) return;
     globalThis.scrollTo({ top: target, behavior: 'instant' });
