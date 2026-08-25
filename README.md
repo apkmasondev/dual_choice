@@ -71,40 +71,40 @@ filled in automatically from the Pages configuration and drives
 Masters live in `assets/` and are never modified or published. They are also
 **not committed** — roughly 50 MB of raw film and audio that the published site
 never loads. Everything under `public/` is generated from them by
-`npm run media` and *is* committed, so `npm ci && npm run build` produces a
+`npm run media` and _is_ committed, so `npm ci && npm run build` produces a
 deployable site with neither the masters nor FFmpeg present.
 
 To re-encode, drop the masters back into `assets/` (filenames are resolved by
 fragment, not exact match — see `SOURCE_PATTERNS` in
 `scripts/media/lib/media.mjs`) and run `npm run media`.
 
-| Master                                                | Role                                              |
-| ----------------------------------------------------- | ------------------------------------------------- |
-| `Person_kneeling_displaying_float…_202608171905.mp4`  | Intro / CHOICE film                               |
-| `Character_throws_crystal_transfo…_202608171911.mp4`  | BLUE / CONTROL branch                             |
-| `Character_throwing_red_sphere_202608171910.mp4`      | RED / DESIRE branch                               |
-| `Glass Thread.mp3`                                    | Soundtrack master                                 |
-| `Zapisana_klatka_z_projektu_Person_202608171911.jpeg` | Reference CHOICE frame                            |
+| Master                                                | Role                   |
+| ----------------------------------------------------- | ---------------------- |
+| `Person_kneeling_displaying_float…_202608171905.mp4`  | Intro / CHOICE film    |
+| `Character_throws_crystal_transfo…_202608171911.mp4`  | BLUE / CONTROL branch  |
+| `Character_throwing_red_sphere_202608171910.mp4`      | RED / DESIRE branch    |
+| `Glass Thread.mp3`                                    | Soundtrack master      |
+| `Zapisana_klatka_z_projektu_Person_202608171911.jpeg` | Reference CHOICE frame |
 
 All three films are 1280x720, 24 fps, 240 frames, 10.005 s.
 
 ### Published media
 
-| File                                     | Size         | Notes                         |
-| ---------------------------------------- | ------------ | ----------------------------- |
-| `media/video/intro-choice-1280-alli.mp4` | 4.86 MB      | All-I, CRF 21, VMAF 95.9      |
-| `media/video/intro-choice-960-alli.mp4`  | 2.49 MB      | All-I, CRF 22, phone variant  |
-| `media/video/blue-control-1280.mp4`      | 1.59 MB      | GOP 48, CRF 21                |
-| `media/video/blue-control-960.mp4`       | 667 KB       | GOP 48, CRF 23                |
-| `media/video/red-desire-1280.mp4`        | 1.39 MB      | GOP 48, CRF 21                |
-| `media/video/red-desire-960.mp4`         | 578 KB       | GOP 48, CRF 23                |
-| `media/audio/glass-thread.opus`          | 3.05 MB      | 96 kbps, 48 kHz stereo        |
-| `media/audio/glass-thread.m4a`           | 3.81 MB      | AAC 128 kbps, Safari fallback |
-| `posters/*.{avif,webp,jpg}`              | 176 KB total | 4 stills, 3 formats each      |
-| `og/dual-choice-og.jpg`                  | 44 KB        | 1200x630                      |
+| File                                | Size         | Notes                         |
+| ----------------------------------- | ------------ | ----------------------------- |
+| `media/video/intro-choice-1280.mp4` | 2.49 MB      | GOP 4, CRF 21, VMAF 95.8      |
+| `media/video/intro-choice-960.mp4`  | 1.26 MB      | GOP 4, CRF 22, phone variant  |
+| `media/video/blue-control-1280.mp4` | 1.59 MB      | GOP 48, CRF 21                |
+| `media/video/blue-control-960.mp4`  | 667 KB       | GOP 48, CRF 23                |
+| `media/video/red-desire-1280.mp4`   | 1.39 MB      | GOP 48, CRF 21                |
+| `media/video/red-desire-960.mp4`    | 578 KB       | GOP 48, CRF 23                |
+| `media/audio/glass-thread.opus`     | 3.05 MB      | 96 kbps, 48 kHz stereo        |
+| `media/audio/glass-thread.m4a`      | 3.81 MB      | AAC 128 kbps, Safari fallback |
+| `posters/*.{avif,webp,jpg}`         | 153 KB total | 4 stills, 3 formats each      |
+| `og/dual-choice-og.jpg`             | 44 KB        | 1200x630                      |
 
-Total shipped media: **18.6 MB**, of which a first visit downloads the intro
-(4.9 MB desktop, 2.5 MB phone) plus one branch. The soundtrack is fetched only
+Total shipped media: **15.0 MB**, of which a first visit downloads the intro
+(2.5 MB desktop, 1.3 MB phone) plus one branch. The soundtrack is fetched only
 after the visitor chooses `ENTER WITH SOUND`.
 
 ### Regenerating media
@@ -132,18 +132,40 @@ immediate cache break, rename the file in `scripts/media/profiles.mjs` and
 
 ---
 
-## Why the intro is All-I and the branches are not
+## Why the intro has a short GOP and the branches do not
 
 The intro is **scrubbed**: scroll position maps to a timestamp, so the decoder
-is asked for arbitrary frames thousands of times. Every frame is therefore
-intra-coded (`keyint=1`), which makes any frame decodable on its own. That costs
-bandwidth — 4.86 MB for 10 s — and it is the right trade for the one film that
-is seeked.
+is asked for arbitrary frames thousands of times. What that costs is the walk
+from the previous keyframe to the frame asked for — so the number that matters
+is the distance between keyframes, not whether it is 1.
 
-The branches only ever play forward. A normal 2-second GOP makes them about
-three times smaller (1.4-1.6 MB) and cheaper to decode, for identical playback.
-`npm run media:verify` fails if the intro stops being All-I, and warns if a
-branch ever becomes All-I.
+It was `keyint=1` at first, which is the safe reading of that sentence rather
+than the measured one. Timing `currentTime` to `seeked` in a browser, on the
+real encodes, fully buffered, over 220 backward seeks — the worst case, since
+scrolling up can never reuse the decoder's forward progress:
+
+| keyint | p50     | p95     | 1280 size | VMAF  |
+| ------ | ------- | ------- | --------- | ----- |
+| 1      | 4.3 ms  | 5.3 ms  | 4.86 MB   | 95.96 |
+| 4      | 4.6 ms  | 6.5 ms  | 2.49 MB   | 95.76 |
+| 8      | 5.4 ms  | 8.7 ms  | 2.03 MB   | 95.75 |
+| 48     | 16.7 ms | 32.5 ms | 1.61 MB   | 95.62 |
+
+The scrub asks for at most one seek per frame, so the budget is 41.7 ms.
+`keyint=4` spends 16% of it and halves the file for 0.2 VMAF, which is an order
+of magnitude below the point where anyone sees a difference; `keyint=48` spends
+78% and would stutter on a slower machine. So the intro ships at 4, and the
+original instinct turns out to have been right about the direction and wrong by
+a factor of four about the distance.
+
+The intro also encodes without B-frames, so a seek lands on the frame it was
+aimed at. The branches keep theirs: they only ever play forward, a normal
+2-second GOP makes them about three times smaller, and two thirds of their
+frames are B-frames.
+
+`npm run media:verify` measures the real distance between keyframes and fails
+if any file exceeds what its profile is encoded for, fails on a B-frame in a
+scrubbed file, and warns if a branch ever becomes All-I.
 
 Every web encode is stripped of audio (`-an`): the soundtrack is a separate,
 globally controlled system, so branch transitions cannot double up on sound.
@@ -256,12 +278,12 @@ stay exactly where the hotspots were measured against.
 `(pointer: coarse)` decides, and it is the pointer rather than the width that
 decides: a small desktop window still has a wheel.
 
-| | scroll | playback |
-| --- | --- | --- |
-| Who moves the film | the visitor, by scrolling | the film, at its own rate |
-| Scroll map | 280–340 vh | collapsed to one screen |
-| Hand-over to CHOICE | scroll ≥ 98.5% + decoder | the film's `ended` |
-| Way past it | keep scrolling | `SKIP`, armed throughout |
+|                     | scroll                    | playback                  |
+| ------------------- | ------------------------- | ------------------------- |
+| Who moves the film  | the visitor, by scrolling | the film, at its own rate |
+| Scroll map          | 280–340 vh                | collapsed to one screen   |
+| Hand-over to CHOICE | scroll ≥ 98.5% + decoder  | the film's `ended`        |
+| Way past it         | keep scrolling            | `SKIP`, armed throughout  |
 
 A finger is a poor jog wheel, and the browser it comes with hides its address
 bar during the first swipe — which changes the scroll range mid-gesture, with
@@ -327,15 +349,15 @@ Reduced motion is modelled as a _mode_, not a state — see the deviations below
 
 Budgets from the plan, and what the build actually does:
 
-| Target               | Budget | Actual             |
-| -------------------- | ------ | ------------------ |
-| Initial JS (gzip)    | 100 kB | **10.2 kB**        |
-| CSS (gzip)           | 30 kB  | **5.5 kB**         |
-| Intro, desktop       | 6 MB   | **4.86 MB**        |
-| Intro, mobile        | 3.5 MB | **2.49 MB**        |
-| Each branch, desktop | 4 MB   | **1.39 / 1.59 MB** |
-| Each branch, mobile  | 2.5 MB | **578 / 667 KB**   |
-| Poster               | 220 KB | **2.7-32 KB**      |
+| Target               | Budget  | Actual             |
+| -------------------- | ------- | ------------------ |
+| Initial JS (gzip)    | 100 kB  | **10.2 kB**        |
+| CSS (gzip)           | 30 kB   | **5.5 kB**         |
+| Intro, desktop       | 3 MB    | **2.49 MB**        |
+| Intro, mobile        | 1.75 MB | **1.26 MB**        |
+| Each branch, desktop | 4 MB    | **1.39 / 1.59 MB** |
+| Each branch, mobile  | 2.5 MB  | **578 / 667 KB**   |
+| Poster               | 220 KB  | **2.7-32 KB**      |
 
 - **LCP** is the intro poster: an AVIF with explicit dimensions,
   `fetchpriority="high"`, preloaded in the head, painted before the decoder is
@@ -384,7 +406,8 @@ than pixel-diffed: a frame grabbed mid-playback is decoder-dependent and would
 fail for reasons unrelated to this project.
 
 **Media gate** (`npm run media:verify`) fails on wrong dimensions or frame rate,
-a stray audio track, an intro that is no longer All-I, a broken faststart
+a stray audio track, keyframes further apart than the profile allows, a
+B-frame in a scrubbed file, a broken faststart
 layout, a shipped audio master, or branch-to-intro continuity below 31 dB.
 
 ---

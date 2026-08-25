@@ -22,8 +22,8 @@ interface VideoVariant {
 
 const VIDEO: Record<'intro' | BranchId, VideoVariant> = {
   intro: {
-    wide: 'media/video/intro-choice-1280-alli.mp4',
-    narrow: 'media/video/intro-choice-960-alli.mp4',
+    wide: 'media/video/intro-choice-1280.mp4',
+    narrow: 'media/video/intro-choice-960.mp4',
   },
   blue: {
     wide: 'media/video/blue-control-1280.mp4',

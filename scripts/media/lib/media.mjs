@@ -100,7 +100,13 @@ export async function probe(file) {
   return JSON.parse(stdout);
 }
 
-/** Counts I-frames vs total frames of the first video stream. */
+/**
+ * Frame-type census of the first video stream.
+ *
+ * `maxGap` is the largest run of frames between one keyframe and the next —
+ * the real number the scrub pays for, since it bounds how far the decoder has
+ * to walk to reach an arbitrary frame. An All-I file has a `maxGap` of 1.
+ */
 export async function frameTypes(file) {
   const { stdout } = await ffprobe([
     '-select_streams',
@@ -115,9 +121,23 @@ export async function frameTypes(file) {
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean);
+  let maxGap = 0;
+  let gap = 0;
+  for (const type of types) {
+    if (type === 'I') {
+      maxGap = Math.max(maxGap, gap);
+      gap = 1;
+    } else {
+      gap++;
+    }
+  }
+  maxGap = Math.max(maxGap, gap);
+
   return {
     total: types.length,
     intra: types.filter((t) => t === 'I').length,
+    bidirectional: types.filter((t) => t === 'B').length,
+    maxGap,
   };
 }
 

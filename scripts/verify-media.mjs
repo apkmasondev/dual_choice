@@ -4,9 +4,10 @@
  *   npm run media:verify
  *
  * Fails the build when an encode has silently drifted: wrong dimensions or
- * frame rate, a stray audio track, an intro that is no longer All-I, a broken
- * faststart layout, a budget overrun, or a branch whose first frame no longer
- * matches the frame the intro ends on (plan sections 28 and 29).
+ * frame rate, a stray audio track, keyframes further apart than the profile is
+ * encoded for, B-frames in a file that gets scrubbed, a broken faststart
+ * layout, a budget overrun, or a branch whose first frame no longer matches
+ * the frame the intro ends on (plan sections 28 and 29).
  */
 import { access, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -96,13 +97,22 @@ async function verifyVideo() {
     if (frames.total !== SOURCE.frames) {
       fail(`${profile.out} has ${String(frames.total)} frames, expected ${String(SOURCE.frames)}.`);
     }
-    if (profile.allIntra && frames.intra !== frames.total) {
+    // The scrub pays for the distance between keyframes, so that distance is
+    // what gets asserted — not the frame types it happens to produce.
+    if (frames.maxGap > profile.keyint) {
       fail(
-        `${profile.out} is meant to be All-I but only ${String(frames.intra)}/${String(frames.total)} ` +
-          'frames are intra-coded. Scroll scrubbing will stutter.',
+        `${profile.out} goes ${String(frames.maxGap)} frames between keyframes, more than the ` +
+          `${String(profile.keyint)} it is encoded for. An arbitrary seek costs the decoder that ` +
+          'whole run, which is what makes a scrub stutter.',
       );
     }
-    if (!profile.allIntra && frames.intra === frames.total) {
+    if (profile.bframes === 0 && frames.bidirectional > 0) {
+      fail(
+        `${profile.out} carries ${String(frames.bidirectional)} B-frames but is scrubbed — ` +
+          'reordered frames make a seek land somewhere other than where it was aimed.',
+      );
+    }
+    if (profile.keyint === BRANCH_KEYINT && frames.intra === frames.total) {
       warn(
         `${profile.out} is All-I although it is only ever played linearly — that wastes bandwidth ` +
           `(expected a keyframe roughly every ${String(BRANCH_KEYINT)} frames).`,
@@ -120,7 +130,8 @@ async function verifyVideo() {
       bytes: size,
       width: video.width,
       height: video.height,
-      allIntra: frames.intra === frames.total,
+      keyint: profile.keyint,
+      maxKeyframeGap: frames.maxGap,
       intraFrames: frames.intra,
       totalFrames: frames.total,
       durationSeconds: Number(data.format.duration),
@@ -287,7 +298,7 @@ export async function verifyMedia() {
   for (const entry of report.video) {
     console.log(
       `  video   ${entry.id.padEnd(12)} ${String(entry.width)}x${String(entry.height)}`.padEnd(34) +
-        `${formatBytes(entry.bytes).padStart(9)}  ${entry.allIntra ? 'All-I' : 'GOP'}`,
+        `${formatBytes(entry.bytes).padStart(9)}  GOP ${String(entry.maxKeyframeGap)}`,
     );
   }
   for (const entry of report.audio) {

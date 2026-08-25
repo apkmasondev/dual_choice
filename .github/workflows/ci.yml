@@ -56,7 +56,7 @@ jobs:
 
       - run: npm ci
 
-      # Verifies the committed encodes: dimensions, frame rate, All-I intro,
+      # Verifies the committed encodes: dimensions, frame rate, keyframe spacing,
       # no stray audio track, faststart, budgets and branch first-frame
       # continuity against the frame the intro ends on.
       - run: npm run media:verify
